@@ -2,7 +2,6 @@
 
 namespace AppBundle\Model\NodeEntity;
 
-use AppBundle\Model\BaseModel;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
@@ -41,5 +40,75 @@ class Department extends BaseModel
      */
     protected $specializations;
 
+    /**
+     * @return string
+     */
+    public function getShortName()
+    {
+        return $this->shortName;
+    }
 
+    /**
+     * @param string $shortName
+     * @return Department
+     */
+    public function setShortName($shortName)
+    {
+        $this->shortName = $shortName;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFullName()
+    {
+        return $this->fullName;
+    }
+
+    /**
+     * @param string $fullName
+     * @return Department
+     */
+    public function setFullName($fullName)
+    {
+        $this->fullName = $fullName;
+        return $this;
+    }
+
+    /**
+     * @return Faculty
+     */
+    public function getFaculty()
+    {
+        return $this->faculty;
+    }
+
+    /**
+     * @param Faculty $faculty
+     * @return Department
+     */
+    public function setFaculty($faculty)
+    {
+        $this->faculty = $faculty;
+        return $this;
+    }
+
+    /**
+     * @return Specialization[]|Collection
+     */
+    public function getSpecializations()
+    {
+        return $this->specializations;
+    }
+
+    /**
+     * @param Specialization[]|Collection $specializations
+     * @return Department
+     */
+    public function setSpecializations($specializations)
+    {
+        $this->specializations = $specializations;
+        return $this;
+    }
 }

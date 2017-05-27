@@ -1,8 +1,6 @@
 <?php
 namespace AppBundle\Model\NodeEntity;
 
-
-use AppBundle\Model\Person;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
 
@@ -13,19 +11,16 @@ use GraphAware\Neo4j\OGM\Common\Collection;
 class Student extends Person
 {
     /**
+     * OGM\Property(type="int")
      * @var integer
      */
-    protected $yearOfStudy;
+    private $yearOfStudy;
 
     /**
-     * @var Series
+     * @OGM\Relationship(type="PART_OF", collection=false, mappedBy="students", targetEntity="SubSeries")
+     * @var SubSeries
      */
-    protected $series;
-
-    /**
-     * @var Specialization
-     */
-    protected $specialization;
+    protected $subSeries;
 
     /**
      * @var Course[] | Collection

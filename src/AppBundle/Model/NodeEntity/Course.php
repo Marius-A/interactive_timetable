@@ -2,7 +2,6 @@
 
 namespace AppBundle\Model\NodeEntity;
 
-use AppBundle\Model\Event;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**

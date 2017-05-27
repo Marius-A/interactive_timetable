@@ -3,8 +3,6 @@
 
 namespace AppBundle\Model\NodeEntity;
 
-
-use AppBundle\Model\BaseModel;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -25,7 +23,7 @@ class SubSeries extends BaseModel
     /**
      * @OGM\Relationship(type="HAVE", direction="BOTH", collection=false, mappedBy="subSeries")
      *
-     * @var string
+     * @var Series
      */
     protected $series;
 

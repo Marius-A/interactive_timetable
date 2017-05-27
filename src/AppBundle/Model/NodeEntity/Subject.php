@@ -1,7 +1,6 @@
 <?php
 namespace AppBundle\Model\NodeEntity;
 
-use AppBundle\Model\BaseModel;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -27,10 +26,64 @@ class Subject extends BaseModel
     protected $description;
 
     /**
-     * @var Department
+     * @var Specialization
      *
      * @OGM\Relationship(type="BELONGS", direction="INCOMING", collection=false, mappedBy="subjects", targetEntity="Specialization")
      */
     protected $specialization;
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     * @return Subject
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDescription()
+    {
+        return $this->description;
+    }
+
+    /**
+     * @param string $description
+     * @return Subject
+     */
+    public function setDescription($description)
+    {
+        $this->description = $description;
+        return $this;
+    }
+
+    /**
+     * @return Specialization
+     */
+    public function getSpecialization()
+    {
+        return $this->specialization;
+    }
+
+    /**
+     * @param Specialization $specialization
+     * @return Subject
+     */
+    public function setSpecialization($specialization)
+    {
+        $this->specialization = $specialization;
+        return $this;
+    }
 
 }

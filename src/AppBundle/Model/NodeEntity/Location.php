@@ -2,7 +2,6 @@
 
 namespace AppBundle\Model\NodeEntity;
 
-use AppBundle\Model\BaseModel;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -19,4 +18,21 @@ class Location extends BaseModel
      */
     protected $name;
 
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     * @return Location
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
 }

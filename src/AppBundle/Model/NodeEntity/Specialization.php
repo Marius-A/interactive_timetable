@@ -2,8 +2,6 @@
 
 namespace AppBundle\Model\NodeEntity;
 
-
-use AppBundle\Model\BaseModel;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
@@ -42,4 +40,76 @@ class Specialization extends BaseModel
      * @var Subject[] | Collection
      */
     protected $subjects;
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     * @return Specialization
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
+     * @return Department
+     */
+    public function getDepartment()
+    {
+        return $this->department;
+    }
+
+    /**
+     * @param Department $department
+     * @return Specialization
+     */
+    public function setDepartment($department)
+    {
+        $this->department = $department;
+        return $this;
+    }
+
+    /**
+     * @return Series[]|Collection
+     */
+    public function getSeries()
+    {
+        return $this->series;
+    }
+
+    /**
+     * @param Series[]|Collection $series
+     * @return Specialization
+     */
+    public function setSeries($series)
+    {
+        $this->series = $series;
+        return $this;
+    }
+
+    /**
+     * @return Subject[]|Collection
+     */
+    public function getSubjects()
+    {
+        return $this->subjects;
+    }
+
+    /**
+     * @param Subject[]|Collection $subjects
+     * @return Specialization
+     */
+    public function setSubjects($subjects)
+    {
+        $this->subjects = $subjects;
+        return $this;
+    }
 }

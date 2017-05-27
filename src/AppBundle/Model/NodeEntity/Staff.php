@@ -2,7 +2,6 @@
 
 namespace AppBundle\Model\NodeEntity;
 
-use AppBundle\Model\Person;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -13,5 +12,9 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
  */
 abstract class Staff extends Person
 {
-
+    /**
+     * @OGM\Property(type="string")
+     * @var string
+     */
+    protected $email;
 }

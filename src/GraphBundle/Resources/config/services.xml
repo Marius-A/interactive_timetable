@@ -1,0 +1,12 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="graph.entity_manager.service" class="GraphBundle\Service\EntityManager">
+            <argument type="string">%neo4j.host%</argument>
+            <argument type="string">"%kernel.cache_dir%/neo4j</argument>
+        </service>
+    </services>
+</container>

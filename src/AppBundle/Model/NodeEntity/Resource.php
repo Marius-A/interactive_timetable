@@ -2,6 +2,7 @@
 
 namespace AppBundle\Model;
 
+use AppBundle\Model\NodeEntity\BaseModel;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**

@@ -1,0 +1,21 @@
+app:
+  warnings:
+    faculty:
+      does_not_exists: Faculty does not exist
+    department:
+      already_exists: This department already exists
+      does_not_exists: This department does not exists
+    specialization:
+      already_exists: This specialization already exists
+      does_not_exists: This specialization does not exists
+    subject:
+      already_exists: This subject already exists
+      does_not_exists: This subject does not exists
+    location:
+      already_exists: This location already exists
+      does_not_exists: This location does not exists
+    event:
+      already_exists: This event already exists
+      does_not_exists: This event does not exists
+
+

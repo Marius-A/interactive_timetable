@@ -1,0 +1,42 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+    <services>
+        <service id="app.calendar_manager.service" class="AppBundle\Service\CalendarManagerService">
+            <call method="setEntityManager">
+                <argument type="service" id="graph.entity_manager.service"/>
+            </call>
+        </service>
+
+        <service id="app.department_manager.service" class="AppBundle\Service\DepartmentManagerService">
+            <call method="setEntityManager">
+                <argument type="service" id="graph.entity_manager.service"/>
+            </call>
+            <call method="setTranslator">
+                <argument type="service" id="translator"/>
+            </call>
+        </service>
+
+        <service id="app.specialization_manager.service" class="AppBundle\Service\SpecializationManagerService">
+            <call method="setEntityManager">
+                <argument type="service" id="graph.entity_manager.service"/>
+            </call>
+            <call method="setTranslator">
+                <argument type="service" id="translator"/>
+            </call>
+        </service>
+
+        <service id="app.faculty_manager.service" class="AppBundle\Service\FacultyManagerService">
+            <call method="setEntityManager">
+                <argument type="service" id="graph.entity_manager.service"/>
+            </call>
+            <call method="setTranslator">
+                <argument type="service" id="translator"/>
+            </call>
+        </service>
+
+
+    </services>
+</container>

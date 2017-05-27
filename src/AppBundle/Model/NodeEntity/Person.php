@@ -1,6 +1,6 @@
 <?php
 
-namespace AppBundle\Model;
+namespace AppBundle\Model\NodeEntity;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
@@ -23,11 +23,5 @@ abstract class Person extends BaseModel
      * @var string
      */
     protected $surname;
-
-    /**
-     * @OGM\Property(type="string")
-     * @var string
-     */
-    protected $email;
 
 }
