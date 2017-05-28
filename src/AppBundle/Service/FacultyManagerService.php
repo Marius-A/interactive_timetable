@@ -9,6 +9,7 @@ use AppBundle\Model\NodeEntity\Faculty;
 use AppBundle\Service\Traits\EntityManagerTrait;
 use AppBundle\Service\Traits\TranslatorTrait;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -128,10 +129,18 @@ class FacultyManagerService
      */
     public function getFacultyById(int $facultyId)
     {
+
+ /*       $query = $this->getEntityManager()->createQuery('MATCH (f:Faculty) WHERE ID(f) = {fId} return f;');
+        $query->addEntityMapping('f', Faculty::class, Query::HYDRATE_SINGLE);
+        $query->setParameter('fId', $facultyId);
+
+        $faculty = $query->getOneResult();*/
+
         $faculty = $this->getEntityManager()
-            ->getRepository('AppBundle\Model\NodeEntity\Faculty')
-            ->find($facultyId);
-        if ($faculty == null) {
+            ->getRepository(Faculty::class)
+            ->findOneById($facultyId);
+
+        if (!($faculty instanceof Faculty)) {
             throw new HttpException(
                 Response::HTTP_NOT_FOUND,
                 $this->getTranslator()->trans('app.warnings.faculty.does_not_exists')

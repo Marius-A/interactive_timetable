@@ -2,7 +2,7 @@
 
 namespace AppBundle\Service\Traits;
 
-use GraphBundle\Service\EntityManager;
+use GraphAware\Neo4j\OGM\EntityManager;
 
 /**
  * trait EntityManagerTrait

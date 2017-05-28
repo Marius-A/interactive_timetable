@@ -14,11 +14,29 @@ use GraphAware\Neo4j\OGM\Common\Collection;
 class Calendar extends BaseModel
 {
     /**
-     * @var  Event[] | Collection
+     * @OGM\Property(type="string")
      *
+     * @var string
+     */
+    protected $name;
+
+    /**
      * @OGM\Relationship(type="HAVE", direction="OUTGOING", collection=true, mappedBy="calendar")
+     *
+     * @var  Event[] | Collection
      */
     protected $events;
+
+    /**
+     * Calendar constructor.
+     * @param string $name
+     */
+    public function __construct($name)
+    {
+        $this->name = $name;
+        $this->events = new Collection();
+    }
+
 
     /**
      * @return Event[]|Collection
@@ -35,6 +53,24 @@ class Calendar extends BaseModel
     public function setEvents($events)
     {
         $this->events = $events;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName(): string
+    {
+        return $this->name;
+    }
+
+    /**
+     * @param string $name
+     * @return Calendar
+     */
+    public function setName(string $name): Calendar
+    {
+        $this->name = $name;
         return $this;
     }
 }

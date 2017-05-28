@@ -25,32 +25,34 @@ class SpecializationManagerService
     const SERVICE_NAME = 'app.specialization_manager.service';
 
     /**
-     * @param string $name
+     * @param string $shortName
+     * @param string $fullName
      * @param Department $department
      * @param Series[] | null $series
      * @param Subject[] | null $subjects
      * @return Specialization
      */
-    public function createNew($name, $department, $series = null, $subjects = null)
+    public function createNew(string $shortName, string $fullName, Department $department, $series = null, $subjects = null)
     {
         $result = $this->getEntityManager()
             ->getRepository(Specialization::class)
             ->findOneBy(
                 array(
-                    'name' => $name,
-                    'department' => $department
+                    'name' => $shortName,
+                    'department' => $department->getId()
                 )
             );
 
         if ($result != null) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.specialization.specialization_already_exists')
+                $this->getTranslator()->trans('app.warnings.specialization.already_exists')
             );
         }
 
         $specialization = new Specialization();
-        $specialization->setName($name)
+        $specialization->setShortName($shortName)
+            ->setFullName($fullName)
             ->setDepartment($department);
 
         if($series != null){
@@ -164,14 +166,15 @@ class SpecializationManagerService
      */
     public function getSpecializationById(int $specializationId)
     {
+        /** @var Specialization $specialization */
         $specialization = $this->getEntityManager()
             ->getRepository('AppBundle\Model\NodeEntity\Specialization')
-            ->find($specializationId);
+            ->findOneById($specializationId);
 
         if ($specialization == null) {
             throw new HttpException(
                 Response::HTTP_NOT_FOUND,
-                $this->getTranslator()->trans('app.warnings.specialization.specialization_does_not_exists')
+                $this->getTranslator()->trans('app.warnings.specialization.does_not_exists')
             );
         }
 

@@ -26,7 +26,8 @@ class Faculty extends BaseModel
     protected $fullName;
 
     /**
-     * @OGM\Relationship(type="HAVE", direction="BOTH", collection=true, mappedBy="faculty", targetEntity="Department")
+     * @OGM\Relationship(type="HAVE", direction="OUTGOING", collection=true, mappedBy="faculty", targetEntity="Department")
+     * @OGM\OrderBy(property="shortName", order="ASC")
      * @var Department[] | Collection
      */
     protected $departments;
@@ -84,4 +85,10 @@ class Faculty extends BaseModel
         $this->departments = $departments;
         return $this;
     }
+
+    function __toString()
+    {
+        return '{"short_name":"' . $this->shortName . '", "full_name" :"' . $this->fullName . '", "id":"' . $this->id . '"}';
+    }
+
 }

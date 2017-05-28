@@ -18,46 +18,45 @@ class Specialization extends BaseModel
      *
      * @var string
      */
-    protected $name;
+    protected $shortName;
 
     /**
-     * @OGM\Relationship(type="PART_OF", direction="INCOMING", collection=false, mappedBy="specialization", targetEntity="Department")
+     * @OGM\Property(type="string")
+     *
+     * @var string
+     */
+    protected $fullName;
+
+    /**
+     * @OGM\Relationship(type="PART_OF", direction="OUTGOING", collection=false, mappedBy="specialization", targetEntity="Department")
      *
      * @var Department
      */
     protected $department;
 
     /**
-     * @OGM\Relationship(type="HAVE", direction="BOTH", collection=true, mappedBy="specialization", targetEntity="Series")
+     * @OGM\Relationship(type="HAVE_SERIES", direction="OUTGOING", collection=true, mappedBy="specialization", targetEntity="Series")
      *
      * @var Series[] | Collection
      */
     protected $series;
 
     /**
-     * @OGM\Relationship(type="BELONGS", direction="OUTGOING", collection=true, mappedBy="specialization", targetEntity="Subject")
+     * @OGM\Relationship(type="BELONGS_TO", direction="INCOMING", collection=true, mappedBy="specialization", targetEntity="Subject")
      *
      * @var Subject[] | Collection
      */
     protected $subjects;
 
     /**
-     * @return string
+     * Specialization constructor.
      */
-    public function getName()
+    public function __construct()
     {
-        return $this->name;
+        $this->series =  new Collection();
+        $this->subjects = new Collection();
     }
 
-    /**
-     * @param string $name
-     * @return Specialization
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-        return $this;
-    }
 
     /**
      * @return Department
@@ -110,6 +109,42 @@ class Specialization extends BaseModel
     public function setSubjects($subjects)
     {
         $this->subjects = $subjects;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getShortName(): string
+    {
+        return $this->shortName;
+    }
+
+    /**
+     * @param string $shortName
+     * @return Specialization
+     */
+    public function setShortName(string $shortName): Specialization
+    {
+        $this->shortName = $shortName;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFullName(): string
+    {
+        return $this->fullName;
+    }
+
+    /**
+     * @param string $fullName
+     * @return Specialization
+     */
+    public function setFullName(string $fullName): Specialization
+    {
+        $this->fullName = $fullName;
         return $this;
     }
 }

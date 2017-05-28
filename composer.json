@@ -31,7 +31,8 @@
         "twig/twig": "^1.0||^2.0",
         "graphaware/neo4j-php-ogm": "@rc",
         "nelmio/api-doc-bundle": "^2.13",
-        "friendsofsymfony/rest-bundle": "^2.2"
+        "friendsofsymfony/rest-bundle": "^2.2",
+        "neo4j/neo4j-bundle": "^0.3.0"
     },
     "require-dev": {
         "sensio/generator-bundle": "^3.0",

@@ -24,7 +24,7 @@ class EventManagerService
 
     const SERVICE_NAME = 'app.event_manager.service';
 
-
+//todo check for overlaps
     public function createNew(
         $name, $description, $startDate, $endDate, $location,
         $repeatUntil = null, $recurrenceFrequency = null,
@@ -43,7 +43,7 @@ class EventManagerService
         if ($result != null) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.event.event_already_exists')
+                $this->getTranslator()->trans('app.warnings.event.already_exists')
             );
         }
 

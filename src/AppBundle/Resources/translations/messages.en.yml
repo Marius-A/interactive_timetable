@@ -5,6 +5,9 @@ app:
     department:
       already_exists: This department already exists
       does_not_exists: This department does not exists
+    series:
+      already_exists: This series already exists
+      does_not_exists: This series does not exists
     specialization:
       already_exists: This specialization already exists
       does_not_exists: This specialization does not exists

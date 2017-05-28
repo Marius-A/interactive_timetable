@@ -12,23 +12,29 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
 class Subject extends BaseModel
 {
     /**
+     * @OGM\Property(type="string")
      * @var string
-     *
-     * OGM\Property(type="string")
      */
     protected $name;
 
     /**
      * @var string
      *
-     * OGM\Property(type="string")
+     * @OGM\Property(type="string")
      */
     protected $description;
 
     /**
+     * @var int
+     *
+     * @OGM\Property(type="int")
+     */
+    protected $yearOfStudy;
+
+    /**
      * @var Specialization
      *
-     * @OGM\Relationship(type="BELONGS", direction="INCOMING", collection=false, mappedBy="subjects", targetEntity="Specialization")
+     * @OGM\Relationship(type="BELONGS_TO", direction="OUTGOING", collection=false, mappedBy="subjects", targetEntity="Specialization")
      */
     protected $specialization;
 
@@ -86,4 +92,21 @@ class Subject extends BaseModel
         return $this;
     }
 
+    /**
+     * @return int
+     */
+    public function getYearOfStudy()
+    {
+        return $this->yearOfStudy;
+    }
+
+    /**
+     * @param int $yearOfStudy
+     * @return Subject
+     */
+    public function setYearOfStudy(int $yearOfStudy)
+    {
+        $this->yearOfStudy = $yearOfStudy;
+        return $this;
+    }
 }

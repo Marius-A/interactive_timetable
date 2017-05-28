@@ -27,45 +27,57 @@ class SubjectManagerService
     /**
      * @param string $name
      * @param string $description
+     * @param int $yearOfStudy
      * @param Specialization $specialization
      * @return Subject
      */
-    public function createNew($name, $description, $specialization)
+    public function createNew(string $name, string $description, int $yearOfStudy, $specialization)
     {
-        $result = $this->getEntityManager()
-            ->getRepository(Subject::class)
-            ->findOneBy(
-                array(
-                    'name' => $name
-                )
-            );
+        $query = $this->getEntityManager()->createQuery('MATCH (s:Specialization)-[:BELONGS_TO]->(su:Subject{name:{subjectName}, yearOfStudy:{yStudy}}) WHERE ID(s) = {specId} return su;');
+        $query->setParameter('specId', $specialization->getId());
+        $query->setParameter('subjectName', $name);
+        $query->setParameter('yStudy', $yearOfStudy);
+        $query->addEntityMapping('su', Subject::class);
+        $result = $query->getOneOrNullResult();
 
         if ($result != null) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.subject.subject_already_exists')
+                $this->getTranslator()->trans('app.warnings.subject.already_exists')
             );
         }
+
 
         $subject = new Subject();
         $subject->setName($name)
             ->setDescription($description)
+            ->setYearOfStudy($yearOfStudy)
             ->setSpecialization($specialization);
 
-        $this->subject = $subject;
-
-        $this->getEntityManager()->persist($this->subject);
+        $this->getEntityManager()->persist($subject);
         $this->getEntityManager()->flush();
 
         return $this->subject;
     }
 
+
     /**
-     *
+     * @param $subjectId
+     * @return Subject
      */
-    public function removeSubject()
+    public function getSubjectById($subjectId)
     {
-        $this->getEntityManager()->remove($this->subject);
-        $this->getEntityManager()->flush();
+        $subject = $this->getEntityManager()
+            ->getRepository('AppBundle\Model\NodeEntity\Subject')
+            ->findOneById($subjectId);
+
+        if (!($subject instanceof Subject)) {
+            throw new HttpException(
+                Response::HTTP_NOT_FOUND,
+                $this->getTranslator()->trans('app.warnings.subject.does_not_exists')
+            );
+        }
+
+        return $subject;
     }
 }

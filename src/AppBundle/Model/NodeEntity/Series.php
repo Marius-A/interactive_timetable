@@ -20,16 +20,32 @@ class Series extends BaseModel
     private $name;
 
     /**
-     * @OGM\Relationship(type="HAVE", direction="BOTH", collection=true, mappedBy="series", targetEntity="SubSeries")
+     * @OGM\Property(type="int")
+     * @var int
+     */
+    private $yearOfStudy;
+
+    /**
+     * @OGM\Relationship(type="HAVE_SERIES", direction="INCOMING", collection=false, mappedBy="series", targetEntity="Specialization")
+     * @var  Specialization
+     */
+    private $specialization;
+
+
+    /**
+     * @OGM\Relationship(type="HAVE_SUB_SERIES", direction="OUTGOING", collection=true, mappedBy="series", targetEntity="SubSeries")
      * @var  SubSeries[] | Collection
      */
     private $subSeries;
 
     /**
-     * @OGM\Relationship(type="HAVE", direction="BOTH", collection=false, mappedBy="series", targetEntity="Specialization")
-     * @var  Specialization
+     * Series constructor.
      */
-    private $specialization;
+    public function __construct()
+    {
+        $this->subSeries = new Collection();
+    }
+
 
     /**
      * @return string
@@ -82,6 +98,24 @@ class Series extends BaseModel
     public function setSpecialization($specialization)
     {
         $this->specialization = $specialization;
+        return $this;
+    }
+
+    /**
+     * @return int
+     */
+    public function getYearOfStudy(): int
+    {
+        return $this->yearOfStudy;
+    }
+
+    /**
+     * @param int $yearOfStudy
+     * @return Series
+     */
+    public function setYearOfStudy(int $yearOfStudy): Series
+    {
+        $this->yearOfStudy = $yearOfStudy;
         return $this;
     }
 }

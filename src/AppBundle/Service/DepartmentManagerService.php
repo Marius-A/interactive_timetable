@@ -10,6 +10,7 @@ use AppBundle\Model\NodeEntity\Specialization;
 use AppBundle\Service\Traits\EntityManagerTrait;
 use AppBundle\Service\Traits\TranslatorTrait;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -42,14 +43,14 @@ class DepartmentManagerService
             ->findOneBy(
                 array(
                     'shortName' => $shortName,
-                    'faculty' => $faculty
+                    'faculty' => $faculty->getId()
                 )
             );
 
         if ($result != null) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.department.department_already_exists')
+                $this->getTranslator()->trans('app.warnings.department.already_exists')
             );
         }
 
@@ -79,7 +80,7 @@ class DepartmentManagerService
         if ($department->getSpecializations()->contains($specialization)) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.department.specialization_already_exists')
+                $this->getTranslator()->trans('app.warnings.specialization.already_exists')
             );
         }
 
@@ -118,7 +119,7 @@ class DepartmentManagerService
         if (!$department->getSpecializations()->removeElement($specialization)) {
             throw new HttpException(
                 Response::HTTP_NOT_FOUND,
-                $this->getTranslator()->trans('app.warnings.department.specialization_does_not_exists')
+                $this->getTranslator()->trans('app.warnings.specialization.does_not_exists')
             );
         }
 
@@ -141,18 +142,23 @@ class DepartmentManagerService
      */
     public function getDepartmentById(int $departmentId)
     {
+        //todo for other entities
+//        $query = $this->getEntityManager()->createQuery('MATCH (n2:Faculty)-[:HAVE]->(n1:Department) WHERE ID(n1)  = {depId} return n1;');
+//        $query->setParameter('depId', $departmentId);
+//        $query->addEntityMapping('n', Department::class);
+//        /** @var Department[] $department */
+//        $department = $query->getResult();
+
+       // print_r($department);die;
+        /** @var Department $department */
         $department = $this->getEntityManager()
-            ->getRepository('AppBundle\Model\NodeEntity\Department')
-            ->findOneBy(
-                array(
-                    'id' => $departmentId
-                )
-            );
+            ->getRepository(Department::class)
+            ->findOneById($departmentId);
 
         if ($department == null) {
             throw new HttpException(
                 Response::HTTP_NOT_FOUND,
-                $this->getTranslator()->trans('app.warnings.department.department_does_not_exists')
+                $this->getTranslator()->trans('app.warnings.department.does_not_exists')
             );
         }
 

@@ -5,7 +5,6 @@ namespace AppBundle\Controller\Rest;
 
 use AppBundle\Service\FacultyManagerService;
 use FOS\RestBundle\Controller\Annotations as Rest;
-use FOS\RestBundle\Controller\Annotations\QueryParam;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Request\ParamFetcher;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
@@ -28,11 +27,12 @@ class FacultyRestController extends FOSRestController
     /**
      * @Rest\Post("/create.{_format}")
      *
-     * @QueryParam(name="full_name",  requirements="[a-zA-Z0-9_ ]", description="Faculty full name")
-     * @QueryParam(name="short_name", requirements="[a-zA-Z0-9_ ]", description="Faculty short name")
+     * @Rest\RequestParam(name="full_name", description="Faculty full name")
+     * @Rest\RequestParam(name="short_name", description="Faculty short name")
      *
      * @ApiDoc(
      *     description="Create a new faculty",
+     *     section="Faculties",
      *     statusCodes={
      *         201="Returned when successful",
      *         404="Returned when faculty cannot be found",
@@ -47,7 +47,6 @@ class FacultyRestController extends FOSRestController
      */
     public function postAction(ParamFetcher $paramFetcher)
     {
-       dump($paramFetcher->all());die;
         /** @var FacultyManagerService $facultyManager */
         $facultyManager = $this->get(FacultyManagerService::SERVICE_NAME);
 
@@ -57,5 +56,36 @@ class FacultyRestController extends FOSRestController
         $facultyManager->createNew($facultyShortName, $facultyFullName);
 
         return new Response('created', Response::HTTP_CREATED);
+    }
+
+    /**
+     * @Rest\Get("/get/id/{facultyId}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get faculty by id",
+     *     section="Faculties",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when faculty cannot be found",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $facultyId
+     * @param $_format
+     * @return Response
+     */
+    public function getByIdAction(int $facultyId, $_format)
+    {
+        /** @var FacultyManagerService $facultyManager */
+        $facultyManager = $this->get(FacultyManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+
+        $faculty = $facultyManager->getFacultyById($facultyId);
+
+        return new Response(
+            $serializer->serialize($faculty, $_format),
+            Response::HTTP_CREATED);
     }
 }

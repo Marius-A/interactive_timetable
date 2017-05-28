@@ -4,6 +4,7 @@ namespace AppBundle\Model\NodeEntity;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use JMS\Serializer\Annotation as Serializer;
 
 /**
  * Class Department
@@ -28,13 +29,13 @@ class Department extends BaseModel
     protected $fullName;
 
     /**
-     * @OGM\Relationship(type="HAVE", direction="BOTH", collection=false, mappedBy="faculty", targetEntity="Faculty")
+     * @OGM\Relationship(type="HAVE", direction="INCOMING", collection=false, mappedBy="departments", targetEntity="Faculty")
      * @var Faculty
      */
     protected $faculty;
 
     /**
-     * @OGM\Relationship(type="PART_OF", direction="OUTGOING", collection=true, mappedBy="department", targetEntity="Specialization")
+     * @OGM\Relationship(type="PART_OF", direction="INCOMING", collection=true, mappedBy="department", targetEntity="Specialization")
      *
      * @var Specialization[] | Collection
      */
@@ -110,5 +111,11 @@ class Department extends BaseModel
     {
         $this->specializations = $specializations;
         return $this;
+    }
+
+
+    function __toString()
+    {
+        return '{"short_name":"'.$this->shortName.'", "full_name" :"'. $this->fullName.'", "id":"'.$this->id.'"}';
     }
 }

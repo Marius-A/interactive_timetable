@@ -29,11 +29,12 @@ class DepartmentRestController extends FOSRestController
     /**
      * @Rest\Post("/create/{facultyId}.{_format}")
      *
-     * @QueryParam(name="full_name", requirements="^[a-zA-Z0-9_ ]*$", default=null, description="Department full name")
-     * @QueryParam(name="short_name", requirements="^[a-zA-Z0-9_ ]*$", description="Department short name")
+     * @Rest\RequestParam(name="full_name", default=null, description="Department full name")
+     * @Rest\RequestParam(name="short_name", description="Department short name")
      *
      * @ApiDoc(
      *     description="Create a new department for the given faculty",
+     *     section="Departments",
      *     statusCodes={
      *         201="Returned when successful",
      *         404="Returned when faculty cannot be found",
@@ -54,11 +55,44 @@ class DepartmentRestController extends FOSRestController
 
         $faculty = $facultyManager->getFacultyById($facultyId);
         $departmentFullName = $paramFetcher->get('full_name');
-        $departmentShortName = $paramFetcher->get('short_ame');
+        $departmentShortName = $paramFetcher->get('short_name');
 
         $departmentManager->createNew($faculty, $departmentFullName, $departmentShortName);
 
         return new Response('created', Response::HTTP_CREATED);
+    }
+
+    /**
+     * @Rest\Get("/get/id/{departmentId}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get department by id",
+     *     section="Departments",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when department cannot be found",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $departmentId
+     * @param $_format
+     * @return Response
+     */
+    public function getByIdAction(int $departmentId, $_format)
+    {
+        /** @var DepartmentManagerService $departmentManager */
+        $departmentManager = $this->get(DepartmentManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+
+        $department = $departmentManager->getDepartmentById($departmentId);
+        $normalizer = new \Normalizer();
+
+
+        return new Response(
+            $serializer->serialize($department, $_format),
+            Response::HTTP_OK);
     }
 }
 
