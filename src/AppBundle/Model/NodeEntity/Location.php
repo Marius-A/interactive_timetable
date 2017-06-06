@@ -19,6 +19,16 @@ class Location extends BaseModel
     protected $name;
 
     /**
+     * Location constructor.
+     * @param string $name
+     */
+    public function __construct($name)
+    {
+        $this->name = $name;
+    }
+
+
+    /**
      * @return string
      */
     public function getName()

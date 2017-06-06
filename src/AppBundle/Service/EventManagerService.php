@@ -9,6 +9,7 @@ use AppBundle\Service\Traits\EntityManagerTrait;
 use AppBundle\Service\Traits\TranslatorTrait;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class EventManagerService
@@ -19,33 +20,29 @@ class EventManagerService
     use EntityManagerTrait;
     use TranslatorTrait;
 
-    /** @var  Event */
-    protected $subject;
-
     const SERVICE_NAME = 'app.event_manager.service';
 
-//todo check for overlaps
+    /**
+     * @param string $name
+     * @param string $description
+     * @param \DateTime $startDate
+     * @param Location $location
+     * @param \DateTime $endDate
+     * @param string $repeatUntil
+     * @param string $recurrenceFrequency
+     * @param null $recurrenceInterval
+     * @param null $recurrenceDay
+     *
+     * todo check for overlaps
+     *
+     * @return Event
+     */
     public function createNew(
-        $name, $description, $startDate, $endDate, $location,
+        $name, $description, $startDate, $location, $endDate = null,
         $repeatUntil = null, $recurrenceFrequency = null,
         $recurrenceInterval = null, $recurrenceDay = null
     )
     {
-
-        $result = $this->getEntityManager()
-            ->getRepository(Event::class)
-            ->findOneBy(
-                array(
-                    'name' => $name
-                )
-            );
-
-        if ($result != null) {
-            throw new HttpException(
-                Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.event.already_exists')
-            );
-        }
 
         $event = new Event(
             $name, $description, 'ACTIVE', $startDate, $endDate, $location,
@@ -77,7 +74,7 @@ class EventManagerService
         if ($result == null) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.location.location_does_not_exists')
+                $this->getTranslator()->trans('app.warnings.location.does_not_exists')
             );
         }
 

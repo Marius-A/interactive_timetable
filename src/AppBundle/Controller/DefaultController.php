@@ -16,12 +16,6 @@ class DefaultController extends Controller
      */
     public function indexAction(Request $request)
     {
-        try{
-            $this->get(CalendarManagerService::SERVICE_NAME)->createNew();
-        }catch (\Exception $exception){
-            dump($exception->getTraceAsString());die('dddd');
-        }
-
         // replace this example code with whatever you need
         return $this->render('default/index.html.twig', [
             'base_dir' => realpath($this->getParameter('kernel.root_dir').'/..').DIRECTORY_SEPARATOR,

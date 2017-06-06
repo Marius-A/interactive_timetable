@@ -27,7 +27,9 @@ class Event extends BaseModel
 
     /**
      * @Enum({"ACTIVE", "CANCELED"})
-     * @var  integer
+     * @OGM\Property(type="string")
+     *
+     * @var  string
      */
     protected $status;
 
@@ -57,6 +59,7 @@ class Event extends BaseModel
     protected $recurrenceFrequency;
 
     /**
+     * every x days
      * @OGM\Property(type="int")
      * @var integer
      */
@@ -87,7 +90,7 @@ class Event extends BaseModel
      * @param string $recurrenceDay
      * @param Location $location
      */
-    public function __construct($name, $description, $status, \DateTime $startDate, \DateTime $endDate,Location $location, \DateTime $repeatUntil = null, $recurrenceFrequency = null, $recurrenceInterval = null, $recurrenceDay = null)
+    public function __construct($name, $description, $status, \DateTime $startDate, \DateTime $endDate, Location $location, \DateTime $repeatUntil = null, $recurrenceFrequency = null, $recurrenceInterval = null, $recurrenceDay = null)
     {
         $this->name = $name;
         $this->description = $description;
@@ -236,22 +239,23 @@ class Event extends BaseModel
     }
 
     /**
-     * @param int $recurrenceInterval
-     * @return Event
+     * @return \string[]
      */
-    public function setRecurrenceInterval($recurrenceInterval)
+    public function getRecurrenceDays()
     {
-        $this->recurrenceInterval = $recurrenceInterval;
-        return $this;
+        return $this->recurrenceDays;
     }
 
     /**
-     * @return string
+     * @param \string[] $recurrenceDays
+     * @return Event
      */
-    public function getRecurrenceDay()
+    public function setRecurrenceDays(array $recurrenceDays)
     {
-        return $this->recurrenceDay;
+        $this->recurrenceDays = $recurrenceDays;
+        return $this;
     }
+
 
     /**
      * @param string $recurrenceDay
