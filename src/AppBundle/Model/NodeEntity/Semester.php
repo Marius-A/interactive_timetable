@@ -3,17 +3,30 @@
 
 namespace AppBundle\Model\NodeEntity;
 
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
 /**
  * Class Semester
  * @package AppBundle\Model\NodeEntity
+ * @OGM\Node(label="Semester")
  */
-class Semester
+class Semester extends BaseModel
 {
-    /** @var  integer */
+    /**
+     * @OGM\Property(type="int")
+     * @var  integer
+     */
     private $number;
-    /** @var  AcademicYear */
+    /**
+     * @OGM\Relationship(type="HAVE", direction="INCOMING", collection=false, mappedBy="semesters", targetEntity="AcademicYear")
+     * @var  AcademicYear
+     */
     private $academicYear;
-    /** @var string */
+
+    /**
+     * @OGM\Property(type="string")
+     * @var string
+     */
     private $key;
 
     /**

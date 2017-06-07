@@ -9,6 +9,7 @@ use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\Annotations\QueryParam;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Request\ParamFetcher;
+use GraphAware\Neo4j\OGM\Common\Collection;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -63,7 +64,7 @@ class DepartmentRestController extends FOSRestController
     }
 
     /**
-     * @Rest\Get("/get/id/{departmentId}.{_format}")
+     * @Rest\Get("/id/{departmentId}.{_format}")
      *
      * @ApiDoc(
      *     description="Get department by id",
@@ -87,12 +88,12 @@ class DepartmentRestController extends FOSRestController
 
 
         $department = $departmentManager->getDepartmentById($departmentId);
-        $normalizer = new \Normalizer();
 
-
+        $department->setSpecializations(new Collection());
         return new Response(
             $serializer->serialize($department, $_format),
-            Response::HTTP_OK);
+            Response::HTTP_OK
+        );
     }
 }
 

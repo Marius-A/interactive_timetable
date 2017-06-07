@@ -49,6 +49,7 @@ class Series extends Participant
      */
     public function __construct($name, $yearOfStudy, Specialization $specialization)
     {
+        parent::__construct();
         $this->name = $name;
         $this->yearOfStudy = $yearOfStudy;
         $this->specialization = $specialization;
@@ -64,11 +65,31 @@ class Series extends Participant
     }
 
     /**
+     * @param string $name
+     * @return Series
+     */
+    public function setName(string $name): Series
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
      * @return int
      */
     public function getYearOfStudy(): int
     {
         return $this->yearOfStudy;
+    }
+
+    /**
+     * @param int $yearOfStudy
+     * @return Series
+     */
+    public function setYearOfStudy(int $yearOfStudy): Series
+    {
+        $this->yearOfStudy = $yearOfStudy;
+        return $this;
     }
 
     /**
@@ -80,6 +101,16 @@ class Series extends Participant
     }
 
     /**
+     * @param Specialization $specialization
+     * @return Series
+     */
+    public function setSpecialization(Specialization $specialization): Series
+    {
+        $this->specialization = $specialization;
+        return $this;
+    }
+
+    /**
      * @return SubSeries[]|Collection
      */
     public function getSubSeries()
@@ -88,10 +119,30 @@ class Series extends Participant
     }
 
     /**
+     * @param SubSeries[]|Collection $subSeries
+     * @return Series
+     */
+    public function setSubSeries($subSeries)
+    {
+        $this->subSeries = $subSeries;
+        return $this;
+    }
+
+    /**
      * @return mixed
      */
     public function getCanBeParticipant()
     {
         return $this->canBeParticipant;
+    }
+
+    /**
+     * @param mixed $canBeParticipant
+     * @return Series
+     */
+    public function setCanBeParticipant($canBeParticipant)
+    {
+        $this->canBeParticipant = $canBeParticipant;
+        return $this;
     }
 }

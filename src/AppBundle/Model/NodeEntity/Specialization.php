@@ -29,14 +29,12 @@ class Specialization extends Participant
 
     /**
      * @OGM\Relationship(type="PART_OF", direction="OUTGOING", collection=false, mappedBy="specialization", targetEntity="Department")
-     *
      * @var Department
      */
     protected $department;
 
     /**
      * @OGM\Relationship(type="HAVE_SERIES", direction="OUTGOING", collection=true, mappedBy="specialization", targetEntity="Series")
-     *
      * @var Series[] | Collection
      */
     protected $series;
@@ -52,6 +50,7 @@ class Specialization extends Participant
      */
     public function __construct($shortName, $fullName, Department $department)
     {
+        parent::__construct();
         $this->shortName = $shortName;
         $this->fullName = $fullName;
         $this->department = $department;
@@ -67,11 +66,31 @@ class Specialization extends Participant
     }
 
     /**
+     * @param string $shortName
+     * @return Specialization
+     */
+    public function setShortName(string $shortName): Specialization
+    {
+        $this->shortName = $shortName;
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getFullName(): string
     {
         return $this->fullName;
+    }
+
+    /**
+     * @param string $fullName
+     * @return Specialization
+     */
+    public function setFullName(string $fullName): Specialization
+    {
+        $this->fullName = $fullName;
+        return $this;
     }
 
     /**
@@ -83,10 +102,48 @@ class Specialization extends Participant
     }
 
     /**
+     * @param Department $department
+     * @return Specialization
+     */
+    public function setDepartment(Department $department): Specialization
+    {
+        $this->department = $department;
+        return $this;
+    }
+
+    /**
      * @return Series[]|Collection
      */
     public function getSeries()
     {
         return $this->series;
+    }
+
+    /**
+     * @param Series[]|Collection $series
+     * @return Specialization
+     */
+    public function setSeries($series)
+    {
+        $this->series = $series;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCanBeParticipant()
+    {
+        return $this->canBeParticipant;
+    }
+
+    /**
+     * @param mixed $canBeParticipant
+     * @return Specialization
+     */
+    public function setCanBeParticipant($canBeParticipant)
+    {
+        $this->canBeParticipant = $canBeParticipant;
+        return $this;
     }
 }
