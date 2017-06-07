@@ -11,7 +11,7 @@ use GraphAware\Neo4j\OGM\Common\Collection;
  *
  * @OGM\Node(label="Series")
  */
-class Series extends BaseModel
+class Series extends Participant
 {
     /**
      * @OGM\Property(type="string")
@@ -38,67 +38,29 @@ class Series extends BaseModel
      */
     private $subSeries;
 
+    /** @OGM\Label(name="Participant") */
+    protected $canBeParticipant = true;
+
     /**
      * Series constructor.
+     * @param string $name
+     * @param int $yearOfStudy
+     * @param Specialization $specialization
      */
-    public function __construct()
+    public function __construct($name, $yearOfStudy, Specialization $specialization)
     {
+        $this->name = $name;
+        $this->yearOfStudy = $yearOfStudy;
+        $this->specialization = $specialization;
         $this->subSeries = new Collection();
     }
-
 
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
-    }
-
-    /**
-     * @param string $name
-     * @return Series
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
-     * @return SubSeries[]|Collection
-     */
-    public function getSubSeries()
-    {
-        return $this->subSeries;
-    }
-
-    /**
-     * @param SubSeries[]|Collection $subSeries
-     * @return Series
-     */
-    public function setSubSeries($subSeries)
-    {
-        $this->subSeries = $subSeries;
-        return $this;
-    }
-
-    /**
-     * @return Specialization
-     */
-    public function getSpecialization()
-    {
-        return $this->specialization;
-    }
-
-    /**
-     * @param Specialization $specialization
-     * @return Series
-     */
-    public function setSpecialization($specialization)
-    {
-        $this->specialization = $specialization;
-        return $this;
     }
 
     /**
@@ -110,12 +72,26 @@ class Series extends BaseModel
     }
 
     /**
-     * @param int $yearOfStudy
-     * @return Series
+     * @return Specialization
      */
-    public function setYearOfStudy(int $yearOfStudy): Series
+    public function getSpecialization(): Specialization
     {
-        $this->yearOfStudy = $yearOfStudy;
-        return $this;
+        return $this->specialization;
+    }
+
+    /**
+     * @return SubSeries[]|Collection
+     */
+    public function getSubSeries()
+    {
+        return $this->subSeries;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCanBeParticipant()
+    {
+        return $this->canBeParticipant;
     }
 }

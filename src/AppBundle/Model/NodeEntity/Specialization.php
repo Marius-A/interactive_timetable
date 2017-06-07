@@ -11,7 +11,7 @@ use GraphAware\Neo4j\OGM\Common\Collection;
  *
  * @OGM\Node(label="Specialization")
  */
-class Specialization extends BaseModel
+class Specialization extends Participant
 {
     /**
      * @OGM\Property(type="string")
@@ -41,75 +41,21 @@ class Specialization extends BaseModel
      */
     protected $series;
 
-    /**
-     * @OGM\Relationship(type="BELONGS_TO", direction="INCOMING", collection=true, mappedBy="specialization", targetEntity="Subject")
-     *
-     * @var Subject[] | Collection
-     */
-    protected $subjects;
+    /** @OGM\Label(name="Participant") */
+    protected $canBeParticipant = true;
 
     /**
      * Specialization constructor.
-     */
-    public function __construct()
-    {
-        $this->series =  new Collection();
-        $this->subjects = new Collection();
-    }
-
-
-    /**
-     * @return Department
-     */
-    public function getDepartment()
-    {
-        return $this->department;
-    }
-
-    /**
+     * @param string $shortName
+     * @param string $fullName
      * @param Department $department
-     * @return Specialization
      */
-    public function setDepartment($department)
+    public function __construct($shortName, $fullName, Department $department)
     {
+        $this->shortName = $shortName;
+        $this->fullName = $fullName;
         $this->department = $department;
-        return $this;
-    }
-
-    /**
-     * @return Series[]|Collection
-     */
-    public function getSeries()
-    {
-        return $this->series;
-    }
-
-    /**
-     * @param Series[]|Collection $series
-     * @return Specialization
-     */
-    public function setSeries($series)
-    {
-        $this->series = $series;
-        return $this;
-    }
-
-    /**
-     * @return Subject[]|Collection
-     */
-    public function getSubjects()
-    {
-        return $this->subjects;
-    }
-
-    /**
-     * @param Subject[]|Collection $subjects
-     * @return Specialization
-     */
-    public function setSubjects($subjects)
-    {
-        $this->subjects = $subjects;
-        return $this;
+        $this->series =  new Collection();
     }
 
     /**
@@ -121,16 +67,6 @@ class Specialization extends BaseModel
     }
 
     /**
-     * @param string $shortName
-     * @return Specialization
-     */
-    public function setShortName(string $shortName): Specialization
-    {
-        $this->shortName = $shortName;
-        return $this;
-    }
-
-    /**
      * @return string
      */
     public function getFullName(): string
@@ -139,12 +75,18 @@ class Specialization extends BaseModel
     }
 
     /**
-     * @param string $fullName
-     * @return Specialization
+     * @return Department
      */
-    public function setFullName(string $fullName): Specialization
+    public function getDepartment(): Department
     {
-        $this->fullName = $fullName;
-        return $this;
+        return $this->department;
+    }
+
+    /**
+     * @return Series[]|Collection
+     */
+    public function getSeries()
+    {
+        return $this->series;
     }
 }

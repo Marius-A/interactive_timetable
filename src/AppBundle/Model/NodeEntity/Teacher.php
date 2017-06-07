@@ -12,11 +12,5 @@ use GraphAware\Neo4j\OGM\Common\Collection;
  */
 class Teacher extends Staff
 {
-    /**
-     * @OGM\Relationship(relationshipEntity="Teaching", direction="OUTGOING", collection=true, mappedBy="teacher")
-     * @var  Course[] | Collection
-     */
-    protected $classes;
-
 
 }

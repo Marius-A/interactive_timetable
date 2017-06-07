@@ -13,6 +13,8 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
  */
 class Resource extends BaseModel
 {
+
+    //todo check if still needed
     /**
      * @OGM\Property(type="string")
      * @var string

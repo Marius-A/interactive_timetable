@@ -1,4 +1,5 @@
 <?php
+
 namespace AppBundle\Model\NodeEntity;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
@@ -25,88 +26,29 @@ class Subject extends BaseModel
     protected $description;
 
     /**
-     * @var int
-     *
-     * @OGM\Property(type="int")
+     * Subject constructor.
+     * @param string $name
+     * @param string $description
      */
-    protected $yearOfStudy;
-
-    /**
-     * @var Specialization
-     *
-     * @OGM\Relationship(type="BELONGS_TO", direction="OUTGOING", collection=false, mappedBy="subjects", targetEntity="Specialization")
-     */
-    protected $specialization;
+    public function __construct(string $name,string $description)
+    {
+        $this->name = $name;
+        $this->description = $description;
+    }
 
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
-     * @param string $name
-     * @return Subject
-     */
-    public function setName($name)
-    {
-        $this->name = $name;
-        return $this;
-    }
-
-    /**
      * @return string
      */
-    public function getDescription()
+    public function getDescription(): string
     {
         return $this->description;
-    }
-
-    /**
-     * @param string $description
-     * @return Subject
-     */
-    public function setDescription($description)
-    {
-        $this->description = $description;
-        return $this;
-    }
-
-    /**
-     * @return Specialization
-     */
-    public function getSpecialization()
-    {
-        return $this->specialization;
-    }
-
-    /**
-     * @param Specialization $specialization
-     * @return Subject
-     */
-    public function setSpecialization($specialization)
-    {
-        $this->specialization = $specialization;
-        return $this;
-    }
-
-    /**
-     * @return int
-     */
-    public function getYearOfStudy()
-    {
-        return $this->yearOfStudy;
-    }
-
-    /**
-     * @param int $yearOfStudy
-     * @return Subject
-     */
-    public function setYearOfStudy(int $yearOfStudy)
-    {
-        $this->yearOfStudy = $yearOfStudy;
-        return $this;
     }
 }

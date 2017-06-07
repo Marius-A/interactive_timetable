@@ -11,28 +11,22 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
  *
  * @OGM\Node(label="SubSeries")
  */
-class SubSeries extends BaseModel
+class SubSeries extends Participant
 {
     /**
      * @OGM\Property(type="string")
-     *
      * @var string
      */
     protected $name;
 
     /**
      * @OGM\Relationship(type="HAVE_SUB_SERIES", direction="INCOMING", collection=false, mappedBy="subSeries")
-     *
      * @var Series
      */
     protected $series;
 
-    /**
-     * @var Calendar
-     *
-     * @OGM\Relationship(type="HAVE", direction="BOTH", collection=false, mappedBy="subSeries")
-     */
-    protected $calendar;
+    /** @OGM\Label(name="Participant") */
+    protected $canBeParticipant = true;
 
     /**
      * SubSeries constructor.
@@ -43,7 +37,6 @@ class SubSeries extends BaseModel
     {
         $this->name = $name;
         $this->series = $series;
-        $this->calendar = new Calendar($series->getName().'-'.$name.'-calendar');
     }
 
 
@@ -80,24 +73,6 @@ class SubSeries extends BaseModel
     public function setSeries(Series $series): SubSeries
     {
         $this->series = $series;
-        return $this;
-    }
-
-    /**
-     * @return Calendar
-     */
-    public function getCalendar(): Calendar
-    {
-        return $this->calendar;
-    }
-
-    /**
-     * @param Calendar $calendar
-     * @return SubSeries
-     */
-    public function setCalendar(Calendar $calendar): SubSeries
-    {
-        $this->calendar = $calendar;
         return $this;
     }
 }

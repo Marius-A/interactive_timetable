@@ -1,7 +1,6 @@
 <?php
-namespace AppBundle\Model\NodeEntity;
 
-use GraphAware\Neo4j\OGM\Common\Collection;
+namespace AppBundle\Model\NodeEntity;
 
 
 /**
@@ -23,7 +22,33 @@ class Student extends Person
     protected $subSeries;
 
     /**
-     * @var Course[] | Collection
+     * Student constructor.
+     * @param string $name
+     * @param string $surname
+     * @param int $yearOfStudy
+     * @param SubSeries $subSeries
      */
-    protected $classes;
+    public function __construct(string $name, string $surname, int $yearOfStudy, SubSeries $subSeries)
+    {
+        parent::__construct($name, $surname);
+        $this->yearOfStudy = $yearOfStudy;
+        $this->subSeries = $subSeries;
+    }
+
+
+    /**
+     * @return int
+     */
+    public function getYearOfStudy(): int
+    {
+        return $this->yearOfStudy;
+    }
+
+    /**
+     * @return SubSeries
+     */
+    public function getSubSeries(): SubSeries
+    {
+        return $this->subSeries;
+    }
 }
