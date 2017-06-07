@@ -28,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
 class SubjectRestController extends FOSRestController
 {
     /**
-     * @Rest\Post("/create/{specializationId}.{_format}")
+     * @Rest\Post("/{specializationId}.{_format}")
      *
      * @Rest\RequestParam(name="name", description="Subject name")
      * @Rest\RequestParam(name="description", description="Subject description")
@@ -70,7 +70,7 @@ class SubjectRestController extends FOSRestController
 
 
     /**
-     * @Rest\Get("/get/id/{subjectId}.{_format}")
+     * @Rest\Get("/id/{subjectId}.{_format}")
      *
      * @ApiDoc(
      *     description="Get specialization by id",
@@ -96,6 +96,7 @@ class SubjectRestController extends FOSRestController
 
         return new Response(
             $serializer->serialize($specialization, $_format),
-            Response::HTTP_OK);
+            Response::HTTP_OK
+        );
     }
 }

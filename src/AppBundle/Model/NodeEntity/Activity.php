@@ -3,15 +3,26 @@
 
 namespace AppBundle\Model\NodeEntity;
 
+use GraphAware\Neo4j\OGM\Annotations as OGM;
+
 /**
  * Class Activity
  * @package AppBundle\Model\NodeEntity
+ *
+ * @OGM\Node(label="Activity")
  */
-class Activity extends BaseModel
+abstract class Activity extends BaseModel
 {
-    /** @var  string | ActivityCategory */
+    /**
+     * @OGM\Property(type="string")
+     * @var  string
+     * @see ActivityCategory
+     */
     private $activityCategory;
-    /** @var  Location */
+    /**
+     * @OGM\Relationship(type="LOCATED_IN", direction="INCOMING", collection=false, mappedBy="activity", targetEntity="Location")
+     * @var  Location
+     */
     private $location;
 
     /**

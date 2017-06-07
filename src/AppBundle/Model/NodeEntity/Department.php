@@ -4,7 +4,6 @@ namespace AppBundle\Model\NodeEntity;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
-use JMS\Serializer\Annotation as Serializer;
 
 /**
  * Class Department
@@ -40,6 +39,21 @@ class Department extends BaseModel
      * @var Specialization[] | Collection
      */
     protected $specializations;
+
+    /**
+     * Department constructor.
+     * @param string $shortName
+     * @param string $fullName
+     * @param Faculty $faculty
+     */
+    public function __construct($shortName, $fullName, Faculty $faculty)
+    {
+        $this->shortName = $shortName;
+        $this->fullName = $fullName;
+        $this->faculty = $faculty;
+        $this->specializations = new Collection();
+    }
+
 
     /**
      * @return string

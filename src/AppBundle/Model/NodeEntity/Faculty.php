@@ -27,10 +27,18 @@ class Faculty extends BaseModel
 
     /**
      * @OGM\Relationship(type="HAVE", direction="OUTGOING", collection=true, mappedBy="faculty", targetEntity="Department")
-     * @OGM\OrderBy(property="shortName", order="ASC")
      * @var Department[] | Collection
      */
     protected $departments;
+
+    /**
+     * Faculty constructor.
+     */
+    public function __construct()
+    {
+        $this->departments = new Collection();
+    }
+
 
     /**
      * @return string

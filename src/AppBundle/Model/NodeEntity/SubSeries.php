@@ -35,6 +35,7 @@ class SubSeries extends Participant
      */
     public function __construct($name, Series $series)
     {
+        parent::__construct();
         $this->name = $name;
         $this->series = $series;
     }
