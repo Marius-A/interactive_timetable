@@ -4,9 +4,19 @@
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
            xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
     <services>
-        <service id="app.calendar_manager.service" class="AppBundle\Service\CalendarManagerService">
+        <service id="app.academic_year_manager.service" class="AppBundle\Service\AcademicYearManagerService">
             <call method="setEntityManager">
                 <argument type="service" id="neo4j.entity_manager"/>
+            </call>
+        </service>
+
+
+        <service id="app.location_manager.service" class="AppBundle\Service\LocationManagerService">
+            <call method="setEntityManager">
+                <argument type="service" id="neo4j.entity_manager"/>
+            </call>
+            <call method="setTranslator">
+                <argument type="service" id="translator"/>
             </call>
         </service>
 

@@ -18,9 +18,6 @@ class LocationManagerService
     use EntityManagerTrait;
     use TranslatorTrait;
 
-    /** @var  Location */
-    protected $subject;
-
     const SERVICE_NAME = 'app.location_manager.service';
 
     /**
@@ -29,53 +26,119 @@ class LocationManagerService
      */
     public function createNew($name)
     {
-        $result = $this->getEntityManager()
-            ->getRepository(Location::class)
-            ->findOneBy(
-                array(
-                    'name' => $name
-                )
-            );
+        /** @var Location $result */
+        $result = $this->getLocationByName($name);
 
         if ($result != null) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.location.location_already_exists')
+                $this->getTranslator()->trans('app.warnings.location.already_exists')
             );
         }
 
-        $subject = new Location();
-        $subject->setName($name);
+        $location = new Location($name);
 
-        $this->subject = $subject;
-
-        $this->getEntityManager()->persist($this->subject);
+        $this->getEntityManager()->persist($location);
         $this->getEntityManager()->flush();
 
-        return $this->subject;
+        return $location;
     }
 
     /**
-     *
+     * @param int $locationId
+     * @param string $newName
      */
-    public function removeLocation()
+    public function updateLocationName(int $locationId, string $newName)
     {
-        $result = $this->getEntityManager()
+        /** @var Location $location */
+        $location = $this->getEntityManager()
             ->getRepository(Location::class)
-            ->findOneBy(
-                array(
-                    'name' => $this->subject->getName()
-                )
-            );
+            ->findOneById($locationId);
 
-        if ($result == null) {
+        $this->throwNotFoundExceptionOnNullLocation($location);
+
+        $otherLocation = $this->getLocationByName($newName);
+
+        if ($otherLocation != null) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.location.location_does_not_exists')
+                $this->getTranslator()->trans('app.warnings.location.already_exists')
             );
         }
 
-        $this->getEntityManager()->remove($this->subject);
+        $location->setName($newName);
+
+        $this->getEntityManager()->persist($location);
         $this->getEntityManager()->flush();
+    }
+
+    /**
+     * @param int $locationId
+     */
+    public function removeLocationById(int $locationId)
+    {
+        /** @var Location $location */
+        $location = $this->getEntityManager()
+            ->getRepository(Location::class)
+            ->findOneById($locationId);
+
+        $this->throwNotFoundExceptionOnNullLocation($location);
+
+        $this->getEntityManager()->remove($location);
+        $this->getEntityManager()->flush();
+    }
+
+    /**
+     * @param string $name
+     * @return Location | null
+     */
+    public function getLocationByName(string $name)
+    {
+        return $this->getEntityManager()
+            ->createQuery('MATCH (l:Location) WHERE l.name = {name} RETURN l')
+            ->addEntityMapping('l', Location::class)
+            ->setParameter('name', $name)
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @param int $id
+     * @return Location|null
+     */
+    public function getLocationById(int $id)
+    {
+        /** @var Location $location */
+        $location = $this->getEntityManager()
+            ->getRepository(Location::class)
+            ->findOneById($id);
+
+        return $location;
+    }
+
+    /**
+     * @param string $partialName
+     * @return Location[]
+     */
+    public function getLocationsWithNameLike(string $partialName)
+    {
+        $partialName = '.*'.strtolower($partialName).'.*';
+        return $this->getEntityManager()
+            ->createQuery("MATCH (l:Location) WHERE toLower(l.name) =~ {name} RETURN l")
+            ->addEntityMapping('l', Location::class)
+            ->setParameter('name', $partialName)
+            ->getResult();
+    }
+
+    /**
+     * @param Location $location
+     */
+    public function throwNotFoundExceptionOnNullLocation($location)
+    {
+        if ($location == null) {
+            throw new HttpException(
+                Response::HTTP_NOT_FOUND,
+                $this->getTranslator()->trans('app.warnings.location.does_not_exists')
+            );
+        }
     }
 }
