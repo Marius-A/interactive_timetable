@@ -54,10 +54,7 @@ class DepartmentManagerService
             );
         }
 
-        $department = new Department();
-        $department->setFullName($fullName)
-            ->setShortName($shortName)
-            ->setFaculty($faculty);
+        $department = new Department($shortName, $fullName, $faculty);
 
         if ($specializations != null) {
             $department->setSpecializations($specializations);

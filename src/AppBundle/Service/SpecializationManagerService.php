@@ -7,7 +7,6 @@ namespace AppBundle\Service;
 use AppBundle\Model\NodeEntity\Department;
 use AppBundle\Model\NodeEntity\Series;
 use AppBundle\Model\NodeEntity\Specialization;
-use AppBundle\Model\NodeEntity\Subject;
 use AppBundle\Service\Traits\EntityManagerTrait;
 use AppBundle\Service\Traits\TranslatorTrait;
 use Symfony\Component\HttpFoundation\Response;
@@ -29,10 +28,9 @@ class SpecializationManagerService
      * @param string $fullName
      * @param Department $department
      * @param Series[] | null $series
-     * @param Subject[] | null $subjects
      * @return Specialization
      */
-    public function createNew(string $shortName, string $fullName, Department $department, $series = null, $subjects = null)
+    public function createNew(string $shortName, string $fullName, Department $department, $series = null)
     {
         $result = $this->getEntityManager()
             ->getRepository(Specialization::class)
@@ -50,18 +48,13 @@ class SpecializationManagerService
             );
         }
 
-        $specialization = new Specialization();
-        $specialization->setShortName($shortName)
-            ->setFullName($fullName)
-            ->setDepartment($department);
+        $specialization = new Specialization($shortName, $fullName, $department);
 
-        if($series != null){
+
+        if ($series != null) {
             $specialization->setSeries($series);
         }
 
-        if ($subjects != null){
-            $specialization->setSubjects($subjects);
-        }
 
         $this->getEntityManager()->persist($specialization);
         $this->getEntityManager()->flush();
@@ -80,35 +73,13 @@ class SpecializationManagerService
         if ($specialization->getSeries()->contains($series)) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.specialization.series_already_exists') . ' ' . $series->getName()
+                $this->getTranslator()->trans('app.warnings.series.already_exists') . ' ' . $series->getName()
             );
         }
 
         $specialization->getSeries()->add($series);
 
         $this->getEntityManager()->persist($series);
-        $this->getEntityManager()->persist($specialization);
-        $this->getEntityManager()->flush();
-    }
-
-    /**
-     * @param Specialization $specialization
-     * @param Subject $subject
-     */
-    public function addSubject(Specialization $specialization, Subject $subject)
-    {
-        $subject->setSpecialization($$specialization);
-
-        if ($specialization->getSubjects()->contains($subject)) {
-            throw new HttpException(
-                Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.specialization.subject_already_exists') . ' ' . $subject->getName()
-            );
-        }
-
-        $specialization->getSubjects()->add($subject);
-
-        $this->getEntityManager()->persist($subject);
         $this->getEntityManager()->persist($specialization);
         $this->getEntityManager()->flush();
     }
@@ -122,7 +93,7 @@ class SpecializationManagerService
         if (!$specialization->getSeries()->removeElement($series)) {
             throw new HttpException(
                 Response::HTTP_NOT_FOUND,
-                $this->getTranslator()->trans('app.warnings.specialization.series_does_not_exists')
+                $this->getTranslator()->trans('app.warnings.series.does_not_exists')
             );
         }
 
@@ -131,23 +102,6 @@ class SpecializationManagerService
         $this->getEntityManager()->flush();
     }
 
-    /**
-     * @param Specialization $specialization
-     * @param Subject $subject
-     */
-    public function removeSubject(Specialization $specialization, Subject $subject)
-    {
-        if (!$specialization->getSubjects()->removeElement($subject)) {
-            throw new HttpException(
-                Response::HTTP_NOT_FOUND,
-                $this->getTranslator()->trans('app.warnings.specialization.subject_does_not_exists')
-            );
-        }
-
-        $this->getEntityManager()->remove($subject);
-        $this->getEntityManager()->persist($specialization);
-        $this->getEntityManager()->flush();
-    }
 
     /**
      * @param int $specializationId
