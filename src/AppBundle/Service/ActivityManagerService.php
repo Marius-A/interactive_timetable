@@ -174,7 +174,7 @@ class ActivityManagerService
      * @param \DateTime $date
      * @return array
      */
-    public function getTeachingActivitiesForSpecializationOnDate(int $specializationId, int $yearOfStudy, \DateTime $date)
+    public function getTeachingActivitiesForParticipantOnDate(int $specializationId, int $yearOfStudy, \DateTime $date)
     {
         $specialization = $this->specializationManager->getSpecializationById($specializationId);
 
@@ -204,7 +204,7 @@ class ActivityManagerService
             case 'PREDARE':
                 $dayNumber = (int) date('w', $date->getTimestamp());
                 $result =  $this->getEntityManager()
-                    ->createQuery(' MATCH (spec:Specialization)<-[r:PART_OF*]-(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId}   AND a.day = {dayNum}  AND a.weekType = \'every\' OR  a.weekType = {weekT}  return a;')
+                    ->createQuery(' MATCH (spec:Participant)<-[r:PART_OF*]-(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId}   AND a.day = {dayNum}  AND a.weekType = \'every\' OR  a.weekType = {weekT}  return a;')
                     ->addEntityMapping('a', TeachingActivity::class, Query::HYDRATE_RAW)
                     ->setParameter('semId', $semester->getId())
                     ->setParameter('specId', $specialization->getId())

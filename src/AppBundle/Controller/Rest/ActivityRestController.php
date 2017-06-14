@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ActivityRestController extends FOSRestController
 {
     /**
-     * @Rest\Get("/{specializationId}/{yearOfStudy}/{dateTime}.{_format}")
+     * @Rest\Get("/{participantId}/{yearOfStudy}/{dateTime}.{_format}")
      *
      * @ApiDoc(
      *     description="Get activities",
@@ -42,13 +42,14 @@ class ActivityRestController extends FOSRestController
      *     }
      * )
      *
-     * @param int $specializationId
+     * @param int $participantId
      * @param int $yearOfStudy
-     * @param $date
+     * @param $dateTime
      * @param $_format
      * @return Response
+     * @internal param $date
      */
-    public function getActivitiesForSpecializationOnDate(int $specializationId, int $yearOfStudy, $dateTime, $_format)
+    public function getActivitiesForParticipantOnDate(int $participantId, int $yearOfStudy, $dateTime, $_format)
     {
         /** @var ActivityManagerService $activityManager */
         $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
@@ -58,7 +59,7 @@ class ActivityRestController extends FOSRestController
         $date = new \DateTime($dateTime);
 
         /** @var TeachingActivity[] | Collection $activities */
-        $activities = $activityManager->getTeachingActivitiesForSpecializationOnDate($specializationId, $yearOfStudy, $date);
+        $activities = $activityManager->getTeachingActivitiesForParticipantOnDate($participantId, $yearOfStudy, $date);
 
         return new Response(
             $serializer->serialize($activities, 'json'),
