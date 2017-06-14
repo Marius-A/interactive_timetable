@@ -10,6 +10,29 @@
             </call>
         </service>
 
+        <service id="app.academic_year.service" class="AppBundle\Service\AcademicYearService">
+            <argument type="string">%itt-su.url%</argument>
+        </service>
+
+
+        <service id="app.activity_manager.service" class="AppBundle\Service\ActivityManagerService">
+            <argument id="app.location_manager.service" type="service"/>
+            <argument id="app.academic_year_manager.service" type="service"/>
+            <argument id="app.subject_manager.service" type="service"/>
+            <argument id="app.teacher_manager.service" type="service"/>
+            <argument id="app.series_manager.service" type="service"/>
+            <argument id="app.specialization_manager.service" type="service"/>
+            <argument id="app.academic_year.service" type="service"/>
+            <argument id="app.participant_manager.service" type="service"/>
+            <argument id="serializer" type="service"/>
+
+            <call method="setEntityManager">
+                <argument type="service" id="neo4j.entity_manager"/>
+            </call>
+            <call method="setTranslator">
+                <argument type="service" id="translator"/>
+            </call>
+        </service>
 
         <service id="app.location_manager.service" class="AppBundle\Service\LocationManagerService">
             <call method="setEntityManager">
@@ -21,6 +44,15 @@
         </service>
 
         <service id="app.department_manager.service" class="AppBundle\Service\DepartmentManagerService">
+            <call method="setEntityManager">
+                <argument type="service" id="neo4j.entity_manager"/>
+            </call>
+            <call method="setTranslator">
+                <argument type="service" id="translator"/>
+            </call>
+        </service>
+
+        <service id="app.teacher_manager.service" class="AppBundle\Service\TeacherManagerService">
             <call method="setEntityManager">
                 <argument type="service" id="neo4j.entity_manager"/>
             </call>
@@ -64,6 +96,17 @@
                 <argument type="service" id="translator"/>
             </call>
         </service>
+
+        <service id="app.participant_manager.service" class="AppBundle\Service\ParticipantManagerService">
+            <call method="setEntityManager">
+                <argument type="service" id="neo4j.entity_manager"/>
+            </call>
+            <call method="setTranslator">
+                <argument type="service" id="translator"/>
+            </call>
+        </service>
+
+
 
         <service id="app.serializer.normalizer.object" class="AppBundle\Util\Normalizer" public="false" parent="serializer.normalizer.object">
             <tag name="serializer.normalizer" priority="-500"/>

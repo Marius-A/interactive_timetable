@@ -7,6 +7,8 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
 /**
  * Class BaseModel
  * @package AppBundle\Model
+ *
+ * @OGM\Node(label="BaseNode")
  */
 abstract class BaseModel
 {

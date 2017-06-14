@@ -1,10 +1,8 @@
 <?php
 
 
-namespace AppBundle\Model\NodeEntity;
+namespace AppBundle\Model\NodeEntity\Util;
 
-
-use AppBundle\Model\NodeEntity\Util\BasicEnum;
 
 /**
  * Class ActivityCategory
@@ -13,12 +11,12 @@ use AppBundle\Model\NodeEntity\Util\BasicEnum;
 abstract class ActivityCategory extends BasicEnum
 {
     // repeatable activities
-    const COURSE     = "COURSE";
-    const SEMINAR    = "SEMINAR";
-    const LABORATORY = "LABORATORY";
+    const COURSE     = "course";
+    const SEMINAR    = "seminar";
+    const LABORATORY = "laboratory";
 
     //others
-    const EXAM       = "EXAM";
-    const COLLOQUIUM = "COLLOQUIUM";
-    const PROJECT    = "PROJECT";
+    const EXAM       = "exam";
+    const COLLOQUIUM = "coloquim";
+    const PROJECT    = "project";
 }

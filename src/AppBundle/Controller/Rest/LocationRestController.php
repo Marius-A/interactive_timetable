@@ -27,7 +27,8 @@ class LocationRestController extends FOSRestController
     /**
      * @Rest\Post("/.{_format}")
      *
-     * @Rest\RequestParam(name="name", default=null, description="Location name name   ex: C4")
+     * @Rest\RequestParam(name="shortName", default=null, description="Location shortName  ex: Aula Constantin Belea")
+     * @Rest\RequestParam(name="fullName", default=null, description="Location fullName   ex: A.C.B")
      *
      * @ApiDoc(
      *     description="Create a location",
@@ -47,9 +48,10 @@ class LocationRestController extends FOSRestController
         /** @var LocationManagerService $locationManager */
         $locationManager = $this->get(LocationManagerService::SERVICE_NAME);
 
-        $locationName = $paramFetcher->get('name');
+        $locationShortName = $paramFetcher->get('shortName');
+        $locationFullName = $paramFetcher->get('fullName');
 
-        $locationManager->createNew($locationName);
+        $locationManager->createNew($locationShortName, $locationFullName);
 
         return new Response('created', Response::HTTP_CREATED);
     }
@@ -77,7 +79,7 @@ class LocationRestController extends FOSRestController
         $locationManager = $this->get(LocationManagerService::SERVICE_NAME);
         $serializer = $this->get('serializer');
 
-        $location = $locationManager->getLocationByName($name);
+        $location = $locationManager->getLocationByShortName($name);
         $locationManager->throwNotFoundExceptionOnNullLocation($location);
 
         return new Response(
@@ -152,7 +154,8 @@ class LocationRestController extends FOSRestController
     /**
      * @Rest\Put("/{id}.{_format}")
      *
-     * @Rest\RequestParam(name="name", default=null, description="New location name   ex: C4")
+     * @Rest\QueryParam(name="shortName", default=null, description="Location shortName  ex: Aula Constantin Belea")
+     * @Rest\QueryParam(name="fullName", default=null, description="Location fullName   ex: A.C.B")
      *
      * @ApiDoc(
      *     description="Update location with the given id",
@@ -174,9 +177,10 @@ class LocationRestController extends FOSRestController
         /** @var LocationManagerService $locationManagerService */
         $locationManagerService = $this->get(LocationManagerService::SERVICE_NAME);
 
-        $newName = $paramFetcher->get('name');
+        $locationShortName = $paramFetcher->get('shortName');
+        $locationFullName = $paramFetcher->get('fullName');
 
-        $locationManagerService->updateLocationName($id, $newName);
+        $locationManagerService->updateLocationName($id, $locationShortName, $locationFullName);
 
         return new Response('updated', Response::HTTP_OK);
     }

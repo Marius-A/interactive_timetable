@@ -11,7 +11,7 @@ use GraphAware\Neo4j\OGM\Common\Collection;
  *
  * @OGM\Node(label="Department")
  */
-class Department extends BaseModel
+class Department extends BaseModel implements \JsonSerializable
 {
     /**
      * @OGM\Property(type="string")
@@ -28,7 +28,7 @@ class Department extends BaseModel
     protected $fullName;
 
     /**
-     * @OGM\Relationship(type="HAVE", direction="INCOMING", collection=false, mappedBy="departments", targetEntity="Faculty")
+     * @OGM\Relationship(type="PART_OF", direction="OUTGOING", collection=false, mappedBy="departments", targetEntity="Faculty")
      * @var Faculty
      */
     protected $faculty;
@@ -131,5 +131,22 @@ class Department extends BaseModel
     function __toString()
     {
         return '{"short_name":"'.$this->shortName.'", "full_name" :"'. $this->fullName.'", "id":"'.$this->id.'"}';
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    function jsonSerialize()
+    {
+        return array(
+            'shortName' => $this->shortName,
+            'fullName'=> $this->fullName,
+            'faculty'=> $this->faculty,
+            'specializations' => $this->specializations->toArray()
+        );
     }
 }

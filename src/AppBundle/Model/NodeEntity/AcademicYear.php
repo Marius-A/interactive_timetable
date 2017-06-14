@@ -12,7 +12,7 @@ use GraphAware\Neo4j\OGM\Common\Collection;
  *
  * @OGM\Node(label="AcademicYear")
  */
-class AcademicYear extends BaseModel
+class AcademicYear extends BaseModel implements \JsonSerializable
 {
     /**
      * @OGM\Property(type="string")
@@ -21,7 +21,7 @@ class AcademicYear extends BaseModel
     private $name;
 
     /**
-     * @OGM\Relationship(type="HAVE", direction="INCOMING", collection=true, mappedBy="academicYear", targetEntity="Semester")
+     * @OGM\Relationship(type="HAVE", direction="BOTH", collection=true, mappedBy="academicYear", targetEntity="Semester")
      * @var Semester[] | Collection
      */
     private $semesters;
@@ -74,5 +74,20 @@ class AcademicYear extends BaseModel
     {
         $this->semesters = $semesters;
         return $this;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    function jsonSerialize()
+    {
+        return array(
+            'name' => $this->name,
+            'semesters'=> $this->semesters->toArray(),
+        );
     }
 }

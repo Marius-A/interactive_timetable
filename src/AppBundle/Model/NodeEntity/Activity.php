@@ -3,6 +3,7 @@
 
 namespace AppBundle\Model\NodeEntity;
 
+use AppBundle\Model\NodeEntity\Util\ActivityCategory;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
@@ -18,12 +19,12 @@ abstract class Activity extends BaseModel
      * @var  string
      * @see ActivityCategory
      */
-    private $activityCategory;
+    protected $activityCategory;
     /**
-     * @OGM\Relationship(type="LOCATED_IN", direction="INCOMING", collection=false, mappedBy="activity", targetEntity="Location")
+     * @OGM\Relationship(type="IN", direction="OUTGOING", collection=false, mappedBy="activities", targetEntity="Location")
      * @var  Location
      */
-    private $location;
+    protected $location;
 
     /**
      * Activity constructor.
@@ -39,7 +40,7 @@ abstract class Activity extends BaseModel
     /**
      * @return ActivityCategory | string
      */
-    public function getActivityCategory(): ActivityCategory
+    public function getActivityCategory()
     {
         return $this->activityCategory;
     }
@@ -47,7 +48,7 @@ abstract class Activity extends BaseModel
     /**
      * @return Location
      */
-    public function getLocation(): Location
+    public function getLocation()
     {
         return $this->location;
     }

@@ -18,7 +18,7 @@ class Semester extends BaseModel
      */
     private $number;
     /**
-     * @OGM\Relationship(type="HAVE", direction="INCOMING", collection=false, mappedBy="semesters", targetEntity="AcademicYear")
+     * @OGM\Relationship(type="HAVE", direction="BOTH", collection=false, mappedBy="semesters", targetEntity="AcademicYear")
      * @var  AcademicYear
      */
     private $academicYear;

@@ -90,7 +90,7 @@ class SeriesRestController extends FOSRestController
         $seriesManager = $this->get(SeriesManagerService::SERVICE_NAME);
 
         $series = $seriesManager->getSeriesById($seriesId);
-        $subSeriesName = $paramFetcher->get('name');
+        $subSeriesName = trim($paramFetcher->get('name'));
 
         $subSeries = new SubSeries($subSeriesName, $series);
 

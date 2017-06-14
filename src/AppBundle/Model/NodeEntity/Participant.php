@@ -5,24 +5,35 @@ namespace AppBundle\Model\NodeEntity;
 
 use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
+use JMS\Serializer\Annotation as Serializer;
 
 /**
  * Class Participant
  * @package AppBundle\Model\NodeEntity
+ *
+ * @OGM\Node(label="Participant")
  */
-abstract class Participant extends BaseModel
+abstract class Participant extends BaseModel implements \JsonSerializable
 {
     /**
+     * @OGM\Property(type="string")
+     * @var string
+     */
+    protected $identifier;
+
+    /**
+     * @Serializer\Exclude()
      * @OGM\Relationship(type="PARTICIPATE", direction="OUTGOING", collection=true, mappedBy="participants", targetEntity="EvaluationActivity")
      * @var EvaluationActivity[] | Collection
      */
-    private $evaluationActivities;
+    protected $evaluationActivities;
 
     /**
+     *
      * @OGM\Relationship(type="PARTICIPATE", direction="OUTGOING", collection=true, mappedBy="participants", targetEntity="TeachingActivity")
      * @var TeachingActivity[] | Collection
      */
-    private $teachingActivities;
+    protected $teachingActivities;
 
     /**
      * Participant constructor.
@@ -67,5 +78,32 @@ abstract class Participant extends BaseModel
     {
         $this->teachingActivities = $teachingActivities;
         return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getIdentifier(): string
+    {
+        return $this->identifier;
+    }
+
+    /**
+     * @param string $identifier
+     * @return Participant
+     */
+    public function setIdentifier(string $identifier): Participant
+    {
+        $this->identifier = $identifier;
+        return $this;
+    }
+
+    function jsonSerialize()
+    {
+        return array(
+            'identifier' => $this->identifier,
+            'evaluationActivities'=>$this->evaluationActivities->toArray(),
+            'teachingActivities'=>$this->teachingActivities->toArray()
+        );
     }
 }

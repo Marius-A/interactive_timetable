@@ -10,6 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
+ * //TODO link location to faculty
  * Class LocationManagerService
  * @package AppBundle\Service
  */
@@ -21,13 +22,13 @@ class LocationManagerService
     const SERVICE_NAME = 'app.location_manager.service';
 
     /**
-     * @param string $name
+     * @param string $shortName
      * @return Location
      */
-    public function createNew($name)
+    public function createNew(string $shortName,string $fullName)
     {
         /** @var Location $result */
-        $result = $this->getLocationByName($name);
+        $result = $this->getLocationByShortName($shortName);
 
         if ($result != null) {
             throw new HttpException(
@@ -36,7 +37,7 @@ class LocationManagerService
             );
         }
 
-        $location = new Location($name);
+        $location = new Location($shortName, $fullName);
 
         $this->getEntityManager()->persist($location);
         $this->getEntityManager()->flush();
@@ -46,27 +47,31 @@ class LocationManagerService
 
     /**
      * @param int $locationId
-     * @param string $newName
+     * @param string $newShortName
+     * @param string $newLongName
      */
-    public function updateLocationName(int $locationId, string $newName)
+    public function updateLocationName(int $locationId, string $newShortName, string $newLongName)
     {
         /** @var Location $location */
-        $location = $this->getEntityManager()
-            ->getRepository(Location::class)
-            ->findOneById($locationId);
+        $location = $this->getLocationById($locationId);
 
-        $this->throwNotFoundExceptionOnNullLocation($location);
+        $otherLocation1 = $this->getLocationByShortName($newShortName);
+        $otherLocation2 = $this->getLocationByFullName($newLongName);
 
-        $otherLocation = $this->getLocationByName($newName);
-
-        if ($otherLocation != null) {
+        if ($otherLocation1 != null || $otherLocation2 != null) {
             throw new HttpException(
                 Response::HTTP_CONFLICT,
                 $this->getTranslator()->trans('app.warnings.location.already_exists')
             );
         }
 
-        $location->setName($newName);
+        if($newShortName != ''){
+            $location->setShortName($newShortName);
+        }
+
+        if($newLongName != ''){
+            $location->setFullName($newLongName);
+        }
 
         $this->getEntityManager()->persist($location);
         $this->getEntityManager()->flush();
@@ -78,11 +83,7 @@ class LocationManagerService
     public function removeLocationById(int $locationId)
     {
         /** @var Location $location */
-        $location = $this->getEntityManager()
-            ->getRepository(Location::class)
-            ->findOneById($locationId);
-
-        $this->throwNotFoundExceptionOnNullLocation($location);
+        $location = $this->getLocationById($locationId);
 
         $this->getEntityManager()->remove($location);
         $this->getEntityManager()->flush();
@@ -92,10 +93,23 @@ class LocationManagerService
      * @param string $name
      * @return Location | null
      */
-    public function getLocationByName(string $name)
+    public function getLocationByShortName(string $name)
     {
         return $this->getEntityManager()
-            ->createQuery('MATCH (l:Location) WHERE l.name = {name} RETURN l')
+            ->createQuery('MATCH (l:Location) WHERE l.shortName = {name} RETURN l')
+            ->addEntityMapping('l', Location::class)
+            ->setParameter('name', $name)
+            ->getOneOrNullResult();
+    }
+
+    /**
+     * @param string $name
+     * @return Location | null
+     */
+    public function getLocationByFullName(string $name)
+    {
+        return $this->getEntityManager()
+            ->createQuery('MATCH (l:Location) WHERE l.fullName = {name} RETURN l')
             ->addEntityMapping('l', Location::class)
             ->setParameter('name', $name)
             ->getOneOrNullResult();
@@ -112,6 +126,8 @@ class LocationManagerService
             ->getRepository(Location::class)
             ->findOneById($id);
 
+        $this->throwNotFoundExceptionOnNullLocation($location);
+
         return $location;
     }
 
@@ -123,7 +139,7 @@ class LocationManagerService
     {
         $partialName = '.*'.strtolower($partialName).'.*';
         return $this->getEntityManager()
-            ->createQuery("MATCH (l:Location) WHERE toLower(l.name) =~ {name} RETURN l")
+            ->createQuery("MATCH (l:Location) WHERE toLower(l.shortName) =~ {name} OR toLower(l.fullName) =~ {name} RETURN l")
             ->addEntityMapping('l', Location::class)
             ->setParameter('name', $partialName)
             ->getResult();
@@ -138,6 +154,20 @@ class LocationManagerService
             throw new HttpException(
                 Response::HTTP_NOT_FOUND,
                 $this->getTranslator()->trans('app.warnings.location.does_not_exists')
+            );
+        }
+    }
+
+    /**
+     * @param Location $location
+     * @param $name
+     */
+    public function throwNotFoundExceptionOnNullLocationWithName($location, $name)
+    {
+        if ($location == null) {
+            throw new HttpException(
+                Response::HTTP_NOT_FOUND,
+                $this->getTranslator()->trans('app.warnings.location.does_not_exists').': '.$name
             );
         }
     }

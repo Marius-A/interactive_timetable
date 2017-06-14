@@ -9,6 +9,7 @@ use AppBundle\Service\SubjectManagerService;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Request\ParamFetcher;
+use GraphAware\Neo4j\OGM\Common\Collection;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -28,52 +29,83 @@ use Symfony\Component\HttpFoundation\Response;
 class SubjectRestController extends FOSRestController
 {
     /**
-     * @Rest\Post("/{specializationId}.{_format}")
+     * @Rest\Post("/.{_format}")
      *
-     * @Rest\RequestParam(name="name", description="Subject name")
+     * @Rest\RequestParam(name="shortName", description="Subject short-name ex: D.A.D.R")
+     * @Rest\RequestParam(name="fullName", description="Subject full-name ex: Dezvoltarea aplicatiilor distribuite in retele")
      * @Rest\RequestParam(name="description", description="Subject description")
-     * @Rest\RequestParam(name="year_of_study", description="Year in witch this subject is studied")
      *
      * @ApiDoc(
-     *     description="Create a new subject for the given specialization",
+     *     description="Create a new subject",
      *     section="Subjects",
      *     statusCodes={
      *         201="Returned when successful",
-     *         404="Returned when subject cannot be found",
+     *         409="Returned when subject with the same short name was found",
      *         500="Returned on internal server error",
      *     }
      * )
      *
-     * @param int $specializationId
      * @param ParamFetcher $paramFetcher
      * @return Response
      */
-    public function postAction(int $specializationId, ParamFetcher $paramFetcher)
+    public function postAction(ParamFetcher $paramFetcher)
     {
         /** @var SubjectManagerService $subjectManager */
         $subjectManager = $this->get(SubjectManagerService::SERVICE_NAME);
-        /** @var SpecializationManagerService $specializationManager */
-        $specializationManager = $this->get(SpecializationManagerService::SERVICE_NAME);
 
-
-        $name = $paramFetcher->get('name');
+        $shortName = $paramFetcher->get('shortName');
+        $fullName = $paramFetcher->get('fullName');
         $description = $paramFetcher->get('description');
-        $yearOfStudy = $paramFetcher->get('year_of_study');
 
-        /** @var Specialization $specialization */
-        $specialization = $specializationManager->getSpecializationById($specializationId);
-
-        $subjectManager->createNew($name, $description, $yearOfStudy, $specialization);
+       $subjectManager->createNew($shortName,$fullName, $description);
 
         return new Response('created', Response::HTTP_CREATED);
     }
 
-
     /**
-     * @Rest\Get("/id/{subjectId}.{_format}")
+     * @Rest\Put("{subjectId}/.{_format}")
+     *
+     * @Rest\QueryParam(name="shortName", description="Subject short-name ex: D.A.D.R")
+     * @Rest\QueryParam(name="fullName", description="Subject full-name ex: Dezvoltarea aplicatiilor distribuite in retele")
+     * @Rest\QueryParam(name="description", description="Subject description")
      *
      * @ApiDoc(
-     *     description="Get specialization by id",
+     *     description="Update subject",
+     *     section="Subjects",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         409="Returned when subject with the same short name was found",
+     *         404="Returned when subject was not founded",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $subjectId
+     * @param ParamFetcher $paramFetcher
+     * @return Response
+     */
+    public function updateAction(int $subjectId, ParamFetcher $paramFetcher)
+    {
+
+        /** @var SubjectManagerService $subjectManager */
+        $subjectManager = $this->get(SubjectManagerService::SERVICE_NAME);
+
+        $shortName = $paramFetcher->get('shortName');
+        $fullName = $paramFetcher->get('fullName');
+        $description = $paramFetcher->get('description');
+
+
+        $subjectManager->updateSubject($subjectId, $shortName,$fullName, $description);
+
+        return new Response('updated', Response::HTTP_CREATED);
+    }
+
+
+    /**
+     * @Rest\Get("/{subjectId}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get subject by id",
      *     section="Subjects",
      *     statusCodes={
      *         201="Returned when successful",
@@ -92,10 +124,101 @@ class SubjectRestController extends FOSRestController
         $subjectManager = $this->get(SubjectManagerService::SERVICE_NAME);
         $serializer = $this->get('serializer');
 
-        $specialization = $subjectManager->getSubjectById($subjectId);
+        $subject = $subjectManager->getSubjectById($subjectId);
+
+        $subject->setEvaluationActivities(new Collection());
+        $subject->setTeachingActivities(new Collection());
 
         return new Response(
-            $serializer->serialize($specialization, $_format),
+            $serializer->serialize($subject, $_format),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
+     * @Rest\Delete("/{subjectId}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Remove subject by id",
+     *     section="Subjects",
+     *     statusCodes={
+     *         200="Returned when successful",
+     *         404="Returned when subject cannot be found",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $subjectId
+     * @return Response
+     */
+    public function removeAction(int $subjectId)
+    {
+        /** @var SubjectManagerService $subjectManager */
+        $subjectManager = $this->get(SubjectManagerService::SERVICE_NAME);
+
+        $subjectManager->removeSubjectById($subjectId);
+
+        return new Response(
+            'removed', Response::HTTP_OK
+        );
+    }
+
+    /**
+     * @Rest\Get("partial-short-name/{shortName}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get subjects with full-name like : ....",
+     *     section="Subjects",
+     *     statusCodes={
+     *         200="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param string $shortName
+     * @param $_format
+     * @return Response
+     */
+    public function getSubjectsWithShortNameLikeAction(string $shortName, $_format)
+    {
+        /** @var SubjectManagerService $subjectManager */
+        $subjectManager = $this->get(SubjectManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $subjects = $subjectManager->getSubjectsWithShortNameNameLike($shortName);
+
+        return new Response(
+            $serializer->serialize($subjects, $_format),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
+     * @Rest\Get("partial-full-name/{fullName}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get subjects with full-name like : ....",
+     *     section="Subjects",
+     *     statusCodes={
+     *         200="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param string $fullName
+     * @param $_format
+     * @return Response
+     */
+    public function getSubjectsWithFullNameLikeAction(string $fullName, $_format)
+    {
+        /** @var SubjectManagerService $subjectManager */
+        $subjectManager = $this->get(SubjectManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $subjects = $subjectManager->getSubjectsWithFullNameNameLike($fullName);
+
+        return new Response(
+            $serializer->serialize($subjects, $_format),
             Response::HTTP_OK
         );
     }
