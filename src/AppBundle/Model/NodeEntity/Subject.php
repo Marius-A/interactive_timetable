@@ -4,6 +4,7 @@ namespace AppBundle\Model\NodeEntity;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use JMS\Serializer\Annotation as Serializer;
 
 /**
  * Class Subject
@@ -17,7 +18,13 @@ class Subject extends BaseModel
      * @OGM\Property(type="string")
      * @var string
      */
-    protected $name;
+    protected $shortName;
+
+    /**
+     * @OGM\Property(type="string")
+     * @var string
+     */
+    protected $fullName;
 
     /**
      * @var string
@@ -27,25 +34,30 @@ class Subject extends BaseModel
     protected $description;
 
     /**
-     * @OGM\Relationship(type="HAVE_SUBJECT", direction="OUTGOING", collection=true, mappedBy="subject", targetEntity="EvaluationActivities")
+     * @Serializer\Exclude()
+     * @OGM\Relationship(type="HAVE_SUBJECT", direction="INCOMING", collection=true, mappedBy="subject", targetEntity="EvaluationActivity")
      * @var EvaluationActivity[] | Collection
      */
     protected $evaluationActivities;
 
     /**
-     * @OGM\Relationship(type="HAVE_SUBJECT", direction="OUTGOING", collection=true, mappedBy="subject", targetEntity="TeachingActivity")
+     * @Serializer\Exclude()
+     * @OGM\Relationship(type="HAVE_SUBJECT", direction="INCOMING", collection=true, mappedBy="subject", targetEntity="TeachingActivity")
      * @var TeachingActivity[] | Collection
      */
     protected $teachingActivities;
 
     /**
      * Subject constructor.
-     * @param string $name
+     * @param string $shortName
+     * @param string $fullName
      * @param string $description
+     * @internal param string $name
      */
-    public function __construct(string $name,string $description)
+    public function __construct(string $shortName, string  $fullName, string $description)
     {
-        $this->name = $name;
+        $this->shortName = $shortName;
+        $this->fullName = $fullName;
         $this->description = $description;
 
         $this->evaluationActivities = new Collection();
@@ -55,9 +67,37 @@ class Subject extends BaseModel
     /**
      * @return string
      */
-    public function getName(): string
+    public function getShortName(): string
     {
-        return $this->name;
+        return $this->shortName;
+    }
+
+    /**
+     * @param string $shortName
+     * @return Subject
+     */
+    public function setShortName(string $shortName): Subject
+    {
+        $this->shortName = $shortName;
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getFullName(): string
+    {
+        return $this->fullName;
+    }
+
+    /**
+     * @param string $fullName
+     * @return Subject
+     */
+    public function setFullName(string $fullName): Subject
+    {
+        $this->fullName = $fullName;
+        return $this;
     }
 
     /**
@@ -66,6 +106,16 @@ class Subject extends BaseModel
     public function getDescription(): string
     {
         return $this->description;
+    }
+
+    /**
+     * @param string $description
+     * @return Subject
+     */
+    public function setDescription(string $description): Subject
+    {
+        $this->description = $description;
+        return $this;
     }
 
     /**

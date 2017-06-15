@@ -29,12 +29,11 @@ abstract class Person extends BaseModel
      * @param string $name
      * @param string $surname
      */
-    public function __construct($name, $surname)
+    public function __construct(string $name,string $surname)
     {
         $this->name = $name;
         $this->surname = $surname;
     }
-
 
     /**
      * @return string
@@ -45,10 +44,30 @@ abstract class Person extends BaseModel
     }
 
     /**
+     * @param string $name
+     * @return Person
+     */
+    public function setName(string $name): Person
+    {
+        $this->name = $name;
+        return $this;
+    }
+
+    /**
      * @return string
      */
     public function getSurname(): string
     {
         return $this->surname;
+    }
+
+    /**
+     * @param string $surname
+     * @return Person
+     */
+    public function setSurname(string $surname): Person
+    {
+        $this->surname = $surname;
+        return $this;
     }
 }

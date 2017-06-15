@@ -20,7 +20,7 @@ class SubSeries extends Participant
     protected $name;
 
     /**
-     * @OGM\Relationship(type="HAVE_SUB_SERIES", direction="INCOMING", collection=false, mappedBy="subSeries")
+     * @OGM\Relationship(type="PART_OF", direction="OUTGOING", collection=false, mappedBy="subSeries")
      * @var Series
      */
     protected $series;
@@ -38,6 +38,7 @@ class SubSeries extends Participant
         parent::__construct();
         $this->name = $name;
         $this->series = $series;
+        $this->identifier = $this->series->identifier.'-'.$this->name;
     }
 
 
@@ -75,5 +76,20 @@ class SubSeries extends Participant
     {
         $this->series = $series;
         return $this;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    function jsonSerialize()
+    {
+        return array(
+            'name' => $this->name,
+            'series'=>$this->series
+        );
     }
 }

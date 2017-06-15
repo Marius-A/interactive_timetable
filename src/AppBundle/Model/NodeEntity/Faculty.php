@@ -26,7 +26,7 @@ class Faculty extends BaseModel
     protected $fullName;
 
     /**
-     * @OGM\Relationship(type="HAVE", direction="OUTGOING", collection=true, mappedBy="faculty", targetEntity="Department")
+     * @OGM\Relationship(type="PART_OF", direction="INCOMING", collection=true, mappedBy="faculty", targetEntity="Department")
      * @var Department[] | Collection
      */
     protected $departments;

@@ -17,4 +17,34 @@ abstract class Staff extends Person
      * @var string
      */
     protected $email;
+
+    /**
+     * Staff constructor.
+     * @param string $name
+     * @param string $surname
+     * @param string $email
+     */
+    public function __construct(string $name, string $surname, string $email)
+    {
+        parent::__construct($name, $surname);
+        $this->email = $email;
+    }
+
+    /**
+     * @return string
+     */
+    public function getEmail(): string
+    {
+        return $this->email;
+    }
+
+    /**
+     * @param string $email
+     * @return Staff
+     */
+    public function setEmail(string $email): Staff
+    {
+        $this->email = $email;
+        return $this;
+    }
 }

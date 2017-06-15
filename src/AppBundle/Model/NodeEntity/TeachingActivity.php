@@ -3,34 +3,70 @@
 
 namespace AppBundle\Model\NodeEntity;
 
+use AppBundle\Model\NodeEntity\Util\ActivityCategory;
 use AppBundle\Model\NodeEntity\Util\DayOfWeek;
 use AppBundle\Model\NodeEntity\Util\WeekType;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Annotations as OGM;
 
 /**
  * Class TeachingActivity
  * @package AppBundle\Model\NodeEntity
+ *
+ * @OGM\Node(label="TeachingActivity")
  */
 class TeachingActivity extends Activity
 {
-    /** @var  Semester */
+    /**
+     * @OGM\Relationship(type="ON_SEMESTER", direction="OUTGOING", collection=false, mappedBy="teachingActivities", targetEntity="Semester")
+     * @var  Semester
+     */
     private $semester;
-    /** @var  string | WeekType */
+
+    /**
+     * @OGM\Property(type="string")
+     * @var  string | WeekType
+     */
     private $weekType;
-    /** @var  integer | DayOfWeek */
+
+    /**
+     * @OGM\Property(type="int")
+     * @var  integer | DayOfWeek
+     */
     private $day;
-    /** @var  integer */
+
+    /**
+     * @OGM\Property(type="int")
+     * @var  integer
+     */
     private $hour;
-    /** @var  integer */
+
+    /**
+     * @OGM\Property(type="int")
+     * @var  integer
+     */
     private $duration;
 
-    /** @var  Teacher */
+    /**
+     * @OGM\Relationship(type="TEACHED_BY", direction="INCOMING", collection=false, mappedBy="teachingActivities", targetEntity="Teacher")
+     * @var  Teacher
+     */
     private $teacher;
-    /** @var  Subject */
+
+    /**
+     * @OGM\Relationship(type="LINKED_TO", direction="OUTGOING", collection=false, mappedBy="teachingActivities", targetEntity="Subject")
+     * @var  Subject
+     */
     private $subject;
 
-    /** @var  Participant[] | Collection */
+    /**
+     * @OGM\Relationship(type="PARTICIPATE", direction="INCOMING", collection=true, mappedBy="teachingActivities", targetEntity="Participant")
+     * @var  Participant[] | Collection
+     */
     private $participants;
+
+    /** @OGM\Label(name="Activity") */
+    protected $isAnActivity = true;
 
     /**
      * TeachingActivity constructor.
@@ -54,7 +90,8 @@ class TeachingActivity extends Activity
         int $hour,
         int $duration,
         Teacher $teacher,
-        Subject $subject)
+        Subject $subject
+    )
     {
         parent::__construct($activityCategory, $location);
         $this->semester = $semester;
@@ -141,5 +178,96 @@ class TeachingActivity extends Activity
     public function getSubject(): Subject
     {
         return $this->subject;
+    }
+
+    /**
+     * @param Semester $semester
+     * @return TeachingActivity
+     */
+    public function setSemester($semester)
+    {
+        $this->semester = $semester;
+        return $this;
+    }
+
+    /**
+     * @param WeekType|string $weekType
+     * @return TeachingActivity
+     */
+    public function setWeekType($weekType)
+    {
+        $this->weekType = $weekType;
+        return $this;
+    }
+
+    /**
+     * @param DayOfWeek|int $day
+     * @return TeachingActivity
+     */
+    public function setDay($day)
+    {
+        $this->day = $day;
+        return $this;
+    }
+
+    /**
+     * @param int $hour
+     * @return TeachingActivity
+     */
+    public function setHour(int $hour): TeachingActivity
+    {
+        $this->hour = $hour;
+        return $this;
+    }
+
+    /**
+     * @param int $duration
+     * @return TeachingActivity
+     */
+    public function setDuration(int $duration): TeachingActivity
+    {
+        $this->duration = $duration;
+        return $this;
+    }
+
+    /**
+     * @param Teacher $teacher
+     * @return TeachingActivity
+     */
+    public function setTeacher(Teacher $teacher): TeachingActivity
+    {
+        $this->teacher = $teacher;
+        return $this;
+    }
+
+    /**
+     * @param Subject $subject
+     * @return TeachingActivity
+     */
+    public function setSubject(Subject $subject): TeachingActivity
+    {
+        $this->subject = $subject;
+        return $this;
+    }
+
+    /**
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     * @since 5.4.0
+     */
+    function jsonSerialize()
+    {
+        return array(
+            'semester'=>$this->semester,
+            'weekType'=>$this->weekType,
+            'day'=>$this->day,
+            'hour'=>$this->hour,
+            'duration'=>$this->duration,
+            'teacher' =>$this->teacher,
+            'subject' => $this->subject,
+            'participants' => $this->participants->toArray()
+        );
     }
 }

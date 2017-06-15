@@ -7,6 +7,7 @@ use AppBundle\Model\NodeEntity\AcademicYear;
 use AppBundle\Model\NodeEntity\Semester;
 use AppBundle\Service\Traits\EntityManagerTrait;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -160,7 +161,29 @@ class AcademicYearManagerService
 
         $this->throwNotFoundExceptionIfSemesterIsNull($semester);
 
-        return $semester;
+        return $semester[0];
+    }
+
+    /**
+     * @param $academicYearName
+     * @param int $number
+     * @return Semester
+     */
+    public function getSemesterByAcademicYearNameAndNumber($academicYearName, int $number)
+    {
+
+        /** @var Semester $result */
+        $semester = $this->getEntityManager()
+            ->createQuery('MATCH (s:Semester)-[:HAVE]->(ay) WHERE s.number = {number} AND ay.name = {academicYear} RETURN s')
+            ->addEntityMapping('s', Semester::class)
+            ->setParameter('academicYear', $academicYearName)
+            ->setParameter('number', $number)
+            ->getOneOrNullResult();
+
+
+        $this->throwNotFoundExceptionIfSemesterIsNull($semester);
+
+        return $semester[0];
     }
 
     /**
@@ -174,6 +197,49 @@ class AcademicYearManagerService
                 'not found'
             );
         }
+    }
+
+
+    public function getSemesterByActivityId($activityId)
+    {
+
+        $semester = $this->getEntityManager()
+            ->createQuery('MATCH (s:Semester)<-[:ON_SEMESTER]-(act:Activity) WHERE ID(act) = {actId} RETURN s')
+            ->addEntityMapping('s', Semester::class, Query::HYDRATE_RAW)
+            ->setParameter('actId', $activityId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundExceptionIfSemesterIsNull($semester);
+
+        return $this->getPropertiesFromSemesterNode($semester[0]['s']);
+    }
+
+
+    public function getAcademicYearBySemesterId($semesterId)
+    {
+        $ac = $this->getEntityManager()
+            ->createQuery('MATCH (ac:AcademicYear)<-[:HAVE]-(sem:Semester) WHERE ID(sem) = {semId} RETURN ac')
+            ->addEntityMapping('ac', AcademicYear::class, Query::HYDRATE_RAW)
+            ->setParameter('semId', $semesterId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundExceptionIfIsAcademicYearIsNullNull($ac);
+
+        return $ac[0]['ac']->values();
+    }
+
+    /**
+     * @param \GraphAware\Common\Type\Node $node
+     * @return array
+     */
+    private function getPropertiesFromSemesterNode($node)
+    {
+        $id = $node->identity();
+        $values = $node->values();
+        $values['id'] = $id;
+        $values['academicYear'] = $this->getAcademicYearBySemesterId($id);
+
+        return $values;
     }
 
     /**

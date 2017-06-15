@@ -26,20 +26,14 @@ class SpecializationManagerService
     /**
      * @param string $shortName
      * @param string $fullName
+     * @param string $specializationCategory
      * @param Department $department
      * @param Series[] | null $series
      * @return Specialization
      */
-    public function createNew(string $shortName, string $fullName, Department $department, $series = null)
+    public function createNew(string $shortName, string $fullName, string $specializationCategory, Department $department, $series = null)
     {
-        $result = $this->getEntityManager()
-            ->getRepository(Specialization::class)
-            ->findOneBy(
-                array(
-                    'name' => $shortName,
-                    'department' => $department->getId()
-                )
-            );
+        $result = $this->getSpecializationByNameDepartmentAndCategory($shortName, $department->getId(), $specializationCategory);
 
         if ($result != null) {
             throw new HttpException(
@@ -48,7 +42,7 @@ class SpecializationManagerService
             );
         }
 
-        $specialization = new Specialization($shortName, $fullName, $department);
+        $specialization = new Specialization($shortName, $fullName, $specializationCategory, $department);
 
 
         if ($series != null) {
@@ -61,47 +55,6 @@ class SpecializationManagerService
 
         return $specialization;
     }
-
-    /**
-     * @param Specialization $specialization
-     * @param Series $series
-     */
-    public function addSeries(Specialization $specialization, Series $series)
-    {
-        $series->setSpecialization($specialization);
-
-        if ($specialization->getSeries()->contains($series)) {
-            throw new HttpException(
-                Response::HTTP_CONFLICT,
-                $this->getTranslator()->trans('app.warnings.series.already_exists') . ' ' . $series->getName()
-            );
-        }
-
-        $specialization->getSeries()->add($series);
-
-        $this->getEntityManager()->persist($series);
-        $this->getEntityManager()->persist($specialization);
-        $this->getEntityManager()->flush();
-    }
-
-    /**
-     * @param Specialization $specialization
-     * @param Series $series
-     */
-    public function removeSeries(Specialization $specialization, Series $series)
-    {
-        if (!$specialization->getSeries()->removeElement($series)) {
-            throw new HttpException(
-                Response::HTTP_NOT_FOUND,
-                $this->getTranslator()->trans('app.warnings.series.does_not_exists')
-            );
-        }
-
-        $this->getEntityManager()->persist($series);
-        $this->getEntityManager()->persist($specialization);
-        $this->getEntityManager()->flush();
-    }
-
 
     /**
      * @param int $specializationId
@@ -133,5 +86,21 @@ class SpecializationManagerService
         }
 
         return $specialization;
+    }
+
+    /**
+     * @param string $name
+     * @param string $departmentId
+     * @param string $category
+     * @return Specialization
+     */
+    public function getSpecializationByNameDepartmentAndCategory(string $name,string $departmentId,string $category){
+        return $this->getEntityManager()
+            ->createQuery('MATCH (s:Specialization)-[:PART_OF]->(d:Department) WHERE s.shortName = {name} AND s.specializationCategory = {category} AND ID(d) = {departmentId} RETURN s')
+            ->addEntityMapping('s', Specialization::class)
+            ->setParameter('name', $name)
+            ->setParameter('category', $category)
+            ->setParameter('departmentId', $departmentId)
+            ->getOneOrNullResult();
     }
 }

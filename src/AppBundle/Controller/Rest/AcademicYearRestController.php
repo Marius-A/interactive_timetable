@@ -61,7 +61,7 @@ class AcademicYearRestController extends FOSRestController
      *     description="Get academic year by name",
      *     section="Academic year",
      *     statusCodes={
-     *         201="Returned when successful",
+     *         201="Returned on success",
      *         404="Returned when the academic year with the given name is not founded",
      *         500="Returned on internal server error",
      *     }

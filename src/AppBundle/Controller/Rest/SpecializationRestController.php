@@ -32,6 +32,7 @@ class SpecializationRestController extends FOSRestController
      *
      * @Rest\RequestParam(name="full_name", description="Specialization full name")
      * @Rest\RequestParam(name="short_name", description="Specialization short name")
+     * @Rest\RequestParam(name="category", description="Specialization category @ex: licenta   -- master")
      *
      * @ApiDoc(
      *     description="Create a new specialization for the given department",
@@ -59,8 +60,9 @@ class SpecializationRestController extends FOSRestController
 
         $specializationFullName = $paramFetcher->get('full_name');
         $specializationShortName = $paramFetcher->get('short_name');
+        $specializationCategory = $paramFetcher->get('category');
 
-        $specializationManager->createNew($specializationShortName, $specializationFullName, $department);
+        $specializationManager->createNew($specializationShortName, $specializationFullName,$specializationCategory, $department);
 
         return new Response('created', Response::HTTP_CREATED);
     }
