@@ -9,6 +9,8 @@ use AppBundle\Model\NodeEntity\Specialization;
 use AppBundle\Model\NodeEntity\SubSeries;
 use AppBundle\Service\Traits\EntityManagerTrait;
 use AppBundle\Service\Traits\TranslatorTrait;
+use GraphAware\Common\Type\Node;
+use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -120,10 +122,27 @@ class SeriesManagerService
     }
 
     /**
+     * @param string $subSeriesId
+     * @return Series
+     */
+    public function getSeriesBySubSeriesId(string $subSeriesId)
+    {
+        $series = $this->getEntityManager()
+            ->createQuery('MATCH (s:SubSeries)-[:PART_OF]->(se:Series) WHERE ID(s) = '.$subSeriesId.' RETURN se')
+            ->addEntityMapping('se', Series::class)
+            ->setParameter('identifier', $subSeriesId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundOnNullSeries($series);
+
+        return $series[0];
+    }
+
+    /**
      * @param int $subSeriesId
      * @return SubSeries
      */
-    public function getSubSeriesSeriesById(int $subSeriesId)
+    public function getSubSeriesById(int $subSeriesId)
     {
         /** @var SubSeries $series */
         $series = $this->getEntityManager()
@@ -134,6 +153,88 @@ class SeriesManagerService
 
         return $series;
     }
+
+
+    /**
+     * @param int $studentId
+     * @return SubSeries
+     */
+    public function getSubSeriesDetailsByStudentId(int $studentId)
+    {
+        /** @var SubSeries $series */
+        $subSeries = $this->getEntityManager()
+            ->createQuery('MATCH (s:SubSeries)<-[:PART_OF]-(st:Student) WHERE ID(st) = {stId} RETURN s')
+            ->addEntityMapping('s', SubSeries::class, Query::HYDRATE_RAW)
+            ->setParameter('stId', $studentId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundOnNullSubSeries($subSeries);
+
+        $subSeries = $this->getPropertiesFromSubSeriesNode($subSeries[0]['s']);
+
+        return $subSeries;
+    }
+
+    /**
+     * @param int $studentId
+     * @return mixed
+     */
+    public function getSeriesDetailsByStudentId(int $studentId)
+    {
+        $series = $this->getEntityManager()
+            ->createQuery('MATCH (s:Series)<-[:PART_OF*]-(st:Student) WHERE ID(st) = {stId} RETURN s')
+            ->addEntityMapping('s', Series::class, Query::HYDRATE_RAW)
+            ->setParameter('stId', $studentId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundOnNullSubSeries($series);
+
+        return $series;
+    }
+
+    /**
+     * @param int $subSeriesId
+     * @return mixed
+     */
+    public function getSeriesDetailsBySubSeriesId(int $subSeriesId)
+    {
+        $series = $this->getEntityManager()
+            ->createQuery('MATCH (s:Series)<-[:PART_OF]-(st:SubSeries) WHERE ID(st) = {stId} RETURN s')
+            ->addEntityMapping('s', Series::class, Query::HYDRATE_RAW)
+            ->setParameter('stId', $subSeriesId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundOnNullSubSeries($series);
+
+        return $this->getPropertiesFromSeriesNode($series[0]['s']);
+    }
+
+    /**
+     * @param Node $node
+     * @return array
+     */
+    private function getPropertiesFromSubSeriesNode($node){
+        $id = $node->identity();
+        $values =  $node->values();
+        $values['id'] = $id;
+        $values['series'] = $this->getSeriesDetailsBySubSeriesId($id);
+
+        return $values;
+    }
+
+    /**
+     * @param Node $node
+     * @return array
+     */
+    private function getPropertiesFromSeriesNode($node){
+        $id = $node->identity();
+        $values =  $node->values();
+        $values['id'] = $id;
+
+        return $values;
+    }
+
+
 
     /**
      * @param Specialization $specialization
@@ -210,7 +311,7 @@ class SeriesManagerService
      */
     public function removeSubSeriesById(int $subSeriesId)
     {
-        $subSeries = $this->getSubSeriesSeriesById($subSeriesId);
+        $subSeries = $this->getSubSeriesById($subSeriesId);
         $this->getEntityManager()->remove($subSeries, true);
         $this->getEntityManager()->flush();
     }

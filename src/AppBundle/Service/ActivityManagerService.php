@@ -54,6 +54,9 @@ class ActivityManagerService
     /** @var  ParticipantManagerService*/
     private $participantManager;
 
+    /** @var  StudentManagerService*/
+    private $studentManager;
+
     /**
      * ActivityManagerService constructor.
      * @param LocationManagerService $locationManager
@@ -72,6 +75,7 @@ class ActivityManagerService
         SeriesManagerService $seriesManager, SpecializationManagerService $specializationManager,
         AcademicYearService $yearService,
         ParticipantManagerService $participantManager,
+        StudentManagerService $studentManagerService,
         Serializer $serializer
     )
     {
@@ -83,6 +87,7 @@ class ActivityManagerService
         $this->seriesManager = $seriesManager;
         $this->specializationManager = $specializationManager;
         $this->participantManager = $participantManager;
+        $this->studentManager = $studentManagerService;
         $this->serializer = $serializer;
     }
 
@@ -174,7 +179,7 @@ class ActivityManagerService
      * @param \DateTime $date
      * @return array
      */
-    public function getTeachingActivitiesForParticipantOnDate(int $specializationId, int $yearOfStudy, \DateTime $date)
+    public function getActivitiesForParticipantOnDate(int $specializationId, int $yearOfStudy, \DateTime $date)
     {
         $specialization = $this->specializationManager->getSpecializationById($specializationId);
 
@@ -182,6 +187,150 @@ class ActivityManagerService
 
         try {
             $data = $this->academicYearService->getActivityDetailsOnDate($date, $yearOfStudy, $specialization->getSpecializationCategory());
+        }catch (HttpException $exception){
+            if($exception->getStatusCode() == Response::HTTP_NOT_FOUND){
+                return array();
+            }
+
+            throw $exception;
+        }
+
+        $weekNumber = $data['weekNumber'];
+        $correspondingActivity = $data['activity']['activityType'];
+
+        $semesterDetails = $data['activity']['activityGroup']['semester'];
+        $academicYear = $semesterDetails['academicYear']['years'];
+        $semesterNumber = $semesterDetails['number'];
+
+        $weekType = $weekNumber % 2 == 0 ? '\'even\'' : '\'odd\'';
+
+        $semester = $this->academicYearManager->getSemesterByAcademicYearNameAndNumber($academicYear, $semesterNumber);
+        $result = array();
+
+        switch ($correspondingActivity) {
+            case 'PREDARE':
+                $dayNumber = (int) date('w', $date->getTimestamp());
+                $result =  $this->getEntityManager()
+                    ->createQuery(' MATCH (spec:Participant)<-[r:PART_OF*]-(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId}   AND a.day = {dayNum}  AND a.weekType = \'every\' OR  a.weekType = {weekT}  return a;')
+                    ->addEntityMapping('a', TeachingActivity::class, Query::HYDRATE_RAW)
+                    ->setParameter('semId', $semester->getId())
+                    ->setParameter('specId', $specialization->getId())
+                    ->setParameter('dayNum', $dayNumber)
+                    ->setParameter('weekT', $weekType)
+                    ->getResult();
+                break;
+            default:
+                throw new HttpException(Response::HTTP_NOT_FOUND, 'No teaching activities were founded on this day');
+        }
+
+        $activities = array();
+        foreach ($result as $act){
+            $activities[] = $this->getPropertiesFromNode($act['a']);
+        }
+
+        return $activities;
+    }
+
+
+    /**
+     * @param int $studentId
+     * @param \DateTime $date
+     * @return array
+     */
+    public function getAllWeekActivitiesForStudentOnDate(int $studentId, \DateTime $date)
+    {
+        $student = $this->studentManager->getStudentById($studentId);
+
+        $series = $this->seriesManager->getSeriesBySubSeriesId($student->getSubSeries()->getId());
+
+
+        $data = array();
+
+        try {
+            $data = $this->academicYearService->getActivityDetailsOnDate(
+                $date,
+                $series->getYearOfStudy(),
+                $series->getSpecialization()->getSpecializationCategory()
+            );
+        }catch (HttpException $exception){
+            if($exception->getStatusCode() != Response::HTTP_NOT_FOUND){
+                throw $exception;
+            }
+        }
+
+        $weekNumber = $data['weekNumber'];
+        $correspondingActivity = $data['activity']['activityType'];
+
+        $semesterDetails = $data['activity']['activityGroup']['semester'];
+        $academicYear = $semesterDetails['academicYear']['years'];
+        $semesterNumber = $semesterDetails['number'];
+
+        $weekType = $weekNumber % 2 == 0 ? 'even' : 'odd';
+
+
+        $semester = $this->academicYearManager->getSemesterByAcademicYearNameAndNumber($academicYear, $semesterNumber);
+
+        $result = array();
+
+        switch ($correspondingActivity) {
+            case 'PREDARE':
+//                $dayNumber = (int) date('w', $date->getTimestamp());
+                $result =  $this->getEntityManager()
+                    ->createQuery('MATCH (spec:Participant)-[r:PART_OF*0..]->(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId} AND (a.weekType = \'every\' OR  a.weekType = {weekT})  return a;')
+                    ->addEntityMapping('a', TeachingActivity::class, Query::HYDRATE_RAW)
+                    ->setParameter('semId', $semester->getId())
+                    ->setParameter('specId', $student->getSubSeries()->getId())
+//                    ->setParameter('dayNum', $dayNumber)
+                    ->setParameter('weekT', $weekType)
+                    ->getResult();
+                break;
+            case 'EXAMINARE':
+                return array('TYPE'=> "EXAM");
+                break;
+
+            case 'PRACTICA':
+
+                return array(
+                    array(
+                        'activityCategory'=> 'practice',
+                        "activityName" => $data['activity']['activityName'],
+                        'period' => $data['activity']['period']
+                    )
+                );break;
+
+            case 'LIBER':
+                return array(
+                );
+                break;
+            default:
+                throw new HttpException(Response::HTTP_NOT_FOUND, 'No activities were founded on this day');
+        }
+
+        $activities = array();
+        foreach ($result as $act){
+            $activities[] = $this->getPropertiesFromNode($act['a']);
+        }
+
+        return $activities;
+    }
+
+    /**
+     * @param int $teacherId
+     * @param \DateTime $date
+     * @return array
+     */
+    public function getActivitiesForTeacherOnDate(int $teacherId, \DateTime $date)
+    {
+        $student = $this->studentManager->getStudentById($studentId);
+
+        $data = array();
+
+        try {
+            $data = $this->academicYearService->getActivityDetailsOnDate(
+                $date,
+                $student->getSubSeries()->getSeries()->getYearOfStudy(),
+                $student->getSubSeries()->getSeries()->getSpecialization()->getSpecializationCategory()
+            );
         }catch (HttpException $exception){
             if($exception->getStatusCode() != Response::HTTP_NOT_FOUND){
                 throw $exception;
@@ -207,7 +356,7 @@ class ActivityManagerService
                     ->createQuery(' MATCH (spec:Participant)<-[r:PART_OF*]-(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId}   AND a.day = {dayNum}  AND a.weekType = \'every\' OR  a.weekType = {weekT}  return a;')
                     ->addEntityMapping('a', TeachingActivity::class, Query::HYDRATE_RAW)
                     ->setParameter('semId', $semester->getId())
-                    ->setParameter('specId', $specialization->getId())
+                    ->setParameter('specId', $student->getSubSeries()->getId())
                     ->setParameter('dayNum', $dayNumber)
                     ->setParameter('weekT', $weekType)
                     ->getResult();
@@ -272,7 +421,7 @@ class ActivityManagerService
                 $participant = $this->seriesManager->getSeriesById($id);
                 break;
             case ParticipantType::SUB_SERIES:
-                $participant = $this->seriesManager->getSubSeriesSeriesById($id);
+                $participant = $this->seriesManager->getSubSeriesById($id);
                 break;
         }
 

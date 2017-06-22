@@ -30,7 +30,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ActivityRestController extends FOSRestController
 {
     /**
-     * @Rest\Get("/{participantId}/{yearOfStudy}/{dateTime}.{_format}")
+     * @Rest\Get("/participant/{participantId}/{yearOfStudy}/{dateTime}.{_format}")
      *
      * @ApiDoc(
      *     description="Get activities",
@@ -59,10 +59,85 @@ class ActivityRestController extends FOSRestController
         $date = new \DateTime($dateTime);
 
         /** @var TeachingActivity[] | Collection $activities */
-        $activities = $activityManager->getTeachingActivitiesForParticipantOnDate($participantId, $yearOfStudy, $date);
+        $activities = $activityManager->getActivitiesForParticipantOnDate($participantId, $yearOfStudy, $date);
+
 
         return new Response(
             $serializer->serialize($activities, 'json'),
+            Response::HTTP_OK
+        );
+    }
+
+
+    /**
+     * @Rest\Get("/student/{studentId}/{dateTime}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get activities for student",
+     *     section="Activity",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when ....",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $studentId
+     * @param $dateTime
+     * @param $_format
+     * @return Response
+     * @internal param $date
+     */
+    public function getActivitiesForStudentOnDate(int $studentId, $dateTime, $_format)
+    {
+        /** @var ActivityManagerService $activityManager */
+        $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
+        /** @var Serializer $serializer */
+        $serializer = $this->get('jms_serializer');
+
+        $date = new \DateTime($dateTime);
+
+        /** @var Activity[] | Collection $activities */
+        $activities = $activityManager->getAllWeekActivitiesForStudentOnDate($studentId, $date);
+
+        return new Response(
+            $serializer->serialize($activities, 'json'),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
+     * @Rest\Get("/teacher/{teacherId}/{dateTime}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get activities for student",
+     *     section="Activity",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when ....",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $teacherId
+     * @param $dateTime
+     * @param $_format
+     * @return Response
+     * @internal param $date
+     */
+    public function getActivitiesForTeacherOnDate(int $teacherId, $dateTime, $_format)
+    {
+        /** @var ActivityManagerService $activityManager */
+        $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
+        /** @var Serializer $serializer */
+        $serializer = $this->get('jms_serializer');
+
+        $date = new \DateTime($dateTime);
+
+        /** @var TeachingActivity[] | Collection $activities */
+        $activities = $activityManager->getActivitiesForTeacherOnDate($teacherId, $date);
+        return new Response(
+            $serializer->serialize($activities, $_format),
             Response::HTTP_OK
         );
     }

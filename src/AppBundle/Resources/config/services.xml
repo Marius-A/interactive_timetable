@@ -14,6 +14,19 @@
             <argument type="string">%itt-su.url%</argument>
         </service>
 
+        <service id="app.student_manager.service" class="AppBundle\Service\StudentManagerService">
+            <call method="setEntityManager">
+                <argument type="service" id="neo4j.entity_manager"/>
+            </call>
+            <call method="setTranslator">
+                <argument type="service" id="translator"/>
+            </call>
+            <call method="setSeriesManagerService">
+                <argument type="service" id="app.series_manager.service"/>
+            </call>
+        </service>
+
+
 
         <service id="app.activity_manager.service" class="AppBundle\Service\ActivityManagerService">
             <argument id="app.location_manager.service" type="service"/>
@@ -24,6 +37,7 @@
             <argument id="app.specialization_manager.service" type="service"/>
             <argument id="app.academic_year.service" type="service"/>
             <argument id="app.participant_manager.service" type="service"/>
+            <argument id="app.student_manager.service" type="service"/>
             <argument id="serializer" type="service"/>
 
             <call method="setEntityManager">

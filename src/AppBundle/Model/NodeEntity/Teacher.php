@@ -4,6 +4,7 @@ namespace AppBundle\Model\NodeEntity;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
+use JMS\Serializer\Annotation as Serializer;
 
 /**
  * Class Teacher
