@@ -4,6 +4,7 @@
 namespace AppBundle\Model\NodeEntity;
 
 use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
  * Class SubSeries
@@ -25,6 +26,12 @@ class SubSeries extends Participant
      */
     protected $series;
 
+    /**
+     * @OGM\Relationship(type="PART_OF", direction="INCOMING", collection=true, mappedBy="subSeries")
+     * @var Student[] | Collection
+     */
+    protected $students;
+
     /** @OGM\Label(name="Participant") */
     protected $canBeParticipant = true;
 
@@ -38,6 +45,7 @@ class SubSeries extends Participant
         parent::__construct();
         $this->name = $name;
         $this->series = $series;
+        $this->students = new Collection();
         $this->identifier = $this->series->identifier.'-'.$this->name;
     }
 
@@ -75,6 +83,42 @@ class SubSeries extends Participant
     public function setSeries(Series $series): SubSeries
     {
         $this->series = $series;
+        return $this;
+    }
+
+    /**
+     * @return Student[]|Collection
+     */
+    public function getStudents()
+    {
+        return $this->students;
+    }
+
+    /**
+     * @param Student[]|Collection $students
+     * @return SubSeries
+     */
+    public function setStudents($students)
+    {
+        $this->students = $students;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCanBeParticipant()
+    {
+        return $this->canBeParticipant;
+    }
+
+    /**
+     * @param mixed $canBeParticipant
+     * @return SubSeries
+     */
+    public function setCanBeParticipant($canBeParticipant)
+    {
+        $this->canBeParticipant = $canBeParticipant;
         return $this;
     }
 
