@@ -5,6 +5,7 @@ namespace AppBundle\Service;
 use AppBundle\Model\NodeEntity\Util\SpecializationCategory;
 use GraphAware\Bolt\Result\Result;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -43,6 +44,7 @@ class AcademicYearService
     {
         $client = $this->getClient($this->apiUrl);
 
+
         $result = $client->post(static::WEEK_BY_DATE_METHOD, array(
             'json' => array(
                 "date" => $date->format('d-m-Y'),
@@ -51,9 +53,6 @@ class AcademicYearService
             )
         ));
 
-        if($result->getStatusCode() != Response::HTTP_OK){
-            throw new HttpException($result->getStatusCode(), 'Api call error to itt-su');
-        }
 
         return json_decode($result->getBody()->getContents(), true);
     }

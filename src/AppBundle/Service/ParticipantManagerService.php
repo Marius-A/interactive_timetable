@@ -11,6 +11,7 @@ use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use \GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
  * Class ParticipantManagerService
@@ -30,6 +31,40 @@ class ParticipantManagerService
             ->createQuery('MATCH (p:Participant)-[:PARTICIPATE]->(act:Activity) WHERE ID(act) = {actId} RETURN p')
             ->addEntityMapping('p', Participant::class, Query::HYDRATE_RAW)
             ->setParameter('actId', $activityId)
+            ->getResult();
+
+        $data = array();
+        foreach ($participants as $participant){
+            $data[] = $this->getPropertiesFromNode($participant['p']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param array $participantsIds
+     * @return Collection | Participant[]
+     */
+    public function getParticipantsByIds(array $participantsIds)
+    {
+        $participants = $this->getEntityManager()
+            ->createQuery('MATCH (p:Participant) WHERE ID(p) IN ['.implode(', ', $participantsIds).'] RETURN p')
+            ->addEntityMapping('p', Participant::class)
+            ->getResult();
+
+        $collection = new Collection();
+        foreach ($participants as $participant){
+            $collection->add($participant);
+        }
+
+        return $collection;
+    }
+
+    public function getAllParticipants()
+    {
+        $participants = $this->getEntityManager()
+            ->createQuery('MATCH (p:Participant) RETURN p')
+            ->addEntityMapping('p', Participant::class, Query::HYDRATE_RAW)
             ->getResult();
 
         $data = array();

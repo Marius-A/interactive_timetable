@@ -152,6 +152,35 @@ class LocationRestController extends FOSRestController
     }
 
     /**
+     * @Rest\Get("/.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get all locations",
+     *     section="Location",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param string $_format
+     * @return Response
+     */
+    public function getAllAction($_format)
+    {
+        /** @var LocationManagerService $locationManager */
+        $locationManager = $this->get(LocationManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $location = $locationManager->getAllLocations();
+
+        return new Response(
+            $serializer->serialize($location, $_format),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
      * @Rest\Put("/{id}.{_format}")
      *
      * @Rest\QueryParam(name="shortName", default=null, description="Location shortName  ex: Aula Constantin Belea")

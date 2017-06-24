@@ -91,6 +91,35 @@ class TeacherRestController extends FOSRestController
     }
 
     /**
+     * @Rest\Get("/.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get all teachers",
+     *     section="Teachers",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param string $_format
+     * @return Response
+     */
+    public function getAllAction($_format)
+    {
+        /** @var TeacherManagerService $teacherManager */
+        $teacherManager = $this->get(TeacherManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $teachers = $teacherManager->getAllTeachers();
+
+        return new Response(
+            $serializer->serialize($teachers, $_format),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
      * @Rest\Put("/{id}.{_format}")
      *
      * @Rest\QueryParam(name="name", description="New name")

@@ -6,6 +6,8 @@ namespace AppBundle\Service;
 use AppBundle\Model\NodeEntity\Location;
 use AppBundle\Service\Traits\EntityManagerTrait;
 use AppBundle\Service\Traits\TranslatorTrait;
+use GraphAware\Common\Type\Node;
+use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -43,6 +45,25 @@ class LocationManagerService
         $this->getEntityManager()->flush();
 
         return $location;
+    }
+
+
+    /**
+     * @return array
+     */
+    public function getAllLocations()
+    {
+        $result = $this->getEntityManager()
+            ->createQuery('MATCH (l:Location) RETURN l')
+            ->addEntityMapping('l', Location::class, Query::HYDRATE_RAW)
+            ->getResult();
+
+        $locations = array();
+        foreach ($result as $item){
+            $locations[] = $this->getLocationDetailsFromNode($item['l']);
+        }
+
+        return $locations;
     }
 
     /**
@@ -158,6 +179,20 @@ class LocationManagerService
         }
     }
 
+    public function getLocationNameByActivityId($activityId)
+    {
+        /** @var Location $location */
+        $location = $this->getEntityManager()
+            ->createQuery('MATCH (l:Location)<-[:IN]-(act:Activity) WHERE ID(act) = {actId} RETURN l')
+            ->addEntityMapping('l', Location::class , Query::HYDRATE_RAW)
+            ->setParameter('actId', $activityId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundExceptionOnNullLocation($location);
+
+        return $this->getLocationDetailsFromNode($location[0]['l']);
+    }
+
     /**
      * @param Location $location
      * @param $name
@@ -171,4 +206,16 @@ class LocationManagerService
             );
         }
     }
+
+    /**
+     * @param Node $node
+     * @return array
+     */
+    private function getLocationDetailsFromNode(Node $node){
+        $location = $node->values();
+        $location['id'] = $node->identity();
+
+        return$location;
+    }
+
 }
