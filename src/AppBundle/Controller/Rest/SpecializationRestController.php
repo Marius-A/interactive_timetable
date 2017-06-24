@@ -99,4 +99,33 @@ class SpecializationRestController extends FOSRestController
             $serializer->serialize($specialization, $_format),
             Response::HTTP_OK);
     }
+
+
+    /**
+     * @Rest\Get("/all.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get all specializations",
+     *     section="Specializations",
+     *     statusCodes={
+     *         200="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param $_format
+     * @return Response
+     */
+    public function getAllAction($_format)
+    {
+        /** @var SpecializationManagerService $departmentManager */
+        $specializationManager = $this->get(SpecializationManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $specializations = $specializationManager->getAllSpecializations();
+
+        return new Response(
+            $serializer->serialize($specializations, $_format),
+            Response::HTTP_OK);
+    }
 }

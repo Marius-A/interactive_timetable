@@ -141,4 +141,38 @@ class ActivityRestController extends FOSRestController
             Response::HTTP_OK
         );
     }
+
+    /**
+     * @Rest\Get("/{id}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get activity by id",
+     *     section="Activity",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when ....",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $id
+     * @param $_format
+     * @return Response
+     * @internal param $date
+     */
+    public function getActivityById(int $id, $_format)
+    {
+        /** @var ActivityManagerService $activityManager */
+        $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
+        /** @var Serializer $serializer */
+        $serializer = $this->get('jms_serializer');
+
+
+        /** @var $activity*/
+        $activity = $activityManager->getActivityDetailsById($id);
+        return new Response(
+            $serializer->serialize($activity, $_format),
+            Response::HTTP_OK
+        );
+    }
 }

@@ -112,6 +112,24 @@ class AcademicYearManagerService
     }
 
     /**
+     * @return array
+     */
+    public function getAllYears()
+    {
+        $result = $this->getEntityManager()
+            ->createQuery('MATCH (ac:AcademicYear) RETURN ac')
+            ->addEntityMapping('ac', AcademicYear::class, Query::HYDRATE_RAW)
+            ->getResult();
+
+        $years = array();
+        foreach ($result as $item){
+            $years[] = $item['ac']->values();
+        }
+
+        return $years;
+    }
+
+    /**
      * @param AcademicYear $academicYear
      * @return Semester[]|Collection
      */

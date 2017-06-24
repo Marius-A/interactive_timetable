@@ -9,6 +9,7 @@ use AppBundle\Model\NodeEntity\Series;
 use AppBundle\Model\NodeEntity\Specialization;
 use AppBundle\Service\Traits\EntityManagerTrait;
 use AppBundle\Service\Traits\TranslatorTrait;
+use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
@@ -88,6 +89,25 @@ class SpecializationManagerService
         return $specialization;
     }
 
+
+    /**
+     * @return array
+     */
+    public function getAllSpecializations()
+    {
+        $result =  $this->getEntityManager()
+            ->createQuery('MATCH (s:Specialization)-[:PART_OF]->(d:Department) RETURN s')
+            ->addEntityMapping('s', Specialization::class, Query::HYDRATE_RAW)
+            ->getResult();
+
+        $specializations = array();
+        foreach ($result as $spec){
+            $specializations[] = $this->getPropertiesFromSpecializationNode($spec['s']);
+        }
+
+        return $specializations;
+    }
+
     /**
      * @param string $name
      * @param string $departmentId
@@ -103,4 +123,18 @@ class SpecializationManagerService
             ->setParameter('departmentId', $departmentId)
             ->getOneOrNullResult();
     }
+
+    /**
+     * @param \GraphAware\Common\Type\Node $node
+     * @return array
+     */
+    private function getPropertiesFromSpecializationNode($node)
+    {
+        $id = $node->identity();
+        $values = $node->values();
+        $values['id'] = $id;
+
+        return $values;
+    }
+
 }

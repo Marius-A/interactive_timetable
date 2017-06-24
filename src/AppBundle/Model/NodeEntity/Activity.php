@@ -31,18 +31,28 @@ abstract class Activity extends BaseModel
      * @param ActivityCategory | string $activityCategory
      * @param Location $location
      */
-    public function __construct($activityCategory, Location $location)
+    public function __construct($activityCategory, $location)
     {
         $this->activityCategory = $activityCategory;
         $this->location = $location;
     }
 
     /**
-     * @return ActivityCategory | string
+     * @return string
      */
     public function getActivityCategory()
     {
         return $this->activityCategory;
+    }
+
+    /**
+     * @param string $activityCategory
+     * @return Activity
+     */
+    public function setActivityCategory(string $activityCategory)
+    {
+        $this->activityCategory = $activityCategory;
+        return $this;
     }
 
     /**
@@ -51,5 +61,15 @@ abstract class Activity extends BaseModel
     public function getLocation()
     {
         return $this->location;
+    }
+
+    /**
+     * @param Location $location
+     * @return Activity
+     */
+    public function setLocation($location)
+    {
+        $this->location = $location;
+        return $this;
     }
 }

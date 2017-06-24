@@ -3,7 +3,6 @@
 
 namespace AppBundle\Service;
 
-use AppBundle\Model\NodeEntity\Activity;
 use AppBundle\Model\NodeEntity\EvaluationActivity;
 use AppBundle\Model\NodeEntity\Location;
 use AppBundle\Model\NodeEntity\Participant;
@@ -19,6 +18,7 @@ use AppBundle\Service\Traits\TranslatorTrait;
 use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\Query;
+use GuzzleHttp\Exception\RequestException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\Serializer\Serializer;
@@ -51,10 +51,10 @@ class ActivityManagerService
     private $serializer;
     /** @var  AcademicYearService */
     private $academicYearService;
-    /** @var  ParticipantManagerService*/
+    /** @var  ParticipantManagerService */
     private $participantManager;
 
-    /** @var  StudentManagerService*/
+    /** @var  StudentManagerService */
     private $studentManager;
 
     /**
@@ -91,6 +91,33 @@ class ActivityManagerService
         $this->serializer = $serializer;
     }
 
+    public function getActivityDetailsById(int $id)
+    {
+        $result = $this->getEntityManager()
+            ->createQuery(' MATCH (a:Activity) where ID(a) = {actId} return a;')
+            ->setParameter('actId', $id)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundExceptionOnNull($result);
+
+        return $this->getPropertiesFromNode($result[0]['a']);
+    }
+
+    /**
+     * @param int $id
+     * @return TeachingActivity
+     */
+    public function getActivityById(int $id)
+    {
+        /** @var TeachingActivity $result */
+        $result = $this->getEntityManager()
+            ->getRepository(TeachingActivity::class)
+            ->findOneById($id);
+
+        $this->throwNotFoundExceptionOnNull($result);
+
+        return $result;
+    }
 
     public function createTeachingActivity(
         string $activityCategory,
@@ -115,6 +142,88 @@ class ActivityManagerService
         $participants = $this->getParticipants($participantsId);
 
         $this->createAndPersistTeachingActivity($location, $activityCategory, $semester, $weekType, $day, $hour, $duration, $teacher, $subject, $participants);
+    }
+
+    /**
+     * @param int $activityId
+     * @param array $changes
+     */
+    public function updateTeachingActivity(int $activityId, array $changes)
+    {
+        if (empty($changes)) {
+            return;
+        }
+
+        /** @var TeachingActivity $activity */
+        $activity = $this->getActivityById($activityId);
+
+        if (!is_null($changes['participants']) && !empty($changes['participants'])) {
+            $activity->setParticipants(
+                $this->participantManager->getParticipantsByIds($changes['participants'])
+            );
+            $this->removeOldParticipantsRelation($activity->getId());
+        }
+        if (!is_null($changes['teacher'])) {
+            $activity->setTeacher(
+                $this->teacherManager->getTeacherById($changes['teacher'])
+            );
+            $this->removeOldTeacherRelation($activity->getId());
+        }
+        if (!is_null($changes['activityCategory'])) {
+            $activity->setActivityCategory($changes['activityCategory']);
+        }
+        if (!is_null($changes['academicYear'])) {
+            $semester = $this->academicYearManager->getSemesterByActivityId($activity->getId());
+            $activity->setSemester(
+                $this->academicYearManager
+                    ->getSemesterByAcademicYearNameAndNumber(
+                        $changes['academicYear'],
+                        $semester['number']
+                    )
+            );
+            $this->removeOldSemesterRelation($activity->getId());
+        }
+        if (!is_null($changes['semesterNumber'])) {
+            $semester = $this->academicYearManager->getSemesterByActivityId($activity->getId());
+            $activity->setSemester(
+                $this->academicYearManager
+                    ->getSemesterByAcademicYearNameAndNumber(
+                        $semester['academicYear']['name'],
+                        $changes['semesterNumber']
+                    )
+            );
+            $this->removeOldSemesterRelation($activity->getId());
+        }
+        if (!is_null($changes['day'])) {
+            $activity->setDay($changes['day']);
+        }
+        if (!is_null($changes['hour'])) {
+            $activity->setHour($changes['hour']);
+        }
+        if (!is_null($changes['subject'])) {
+            $activity->setSubject(
+                $this->subjectManager->getSubjectById($changes['subject'])
+            );
+            $this->removeOldSubjectRelation($activity->getId());
+        }
+        if (!is_null($changes['location'])) {
+            $activity->setLocation(
+                $this->locationManager->getLocationById($changes['location'])
+            );
+            $this->removeOldLocationRelation($activity->getId());
+        }
+        if (!is_null($changes['weekType'])) {
+            if($changes['weekType']!= $activity->getWeekType()) {
+                $activity->setWeekType($changes['weekType']);
+            }
+        }
+        if (!is_null($changes['duration'])) {
+            if($changes['duration']!= $activity->getDuration()) {
+                $activity->setDuration($changes['duration']);
+            }
+        }
+
+        $this->getEntityManager()->flush();
     }
 
     /**
@@ -172,6 +281,33 @@ class ActivityManagerService
         $this->getEntityManager()->flush();
     }
 
+    /**
+     * @param string $academicYear
+     * @param int $semesterNumber
+     * @param int $specializationId
+     * @return array
+     */
+    public function getAllActivitiesForSemesterAndSpecialization(string $academicYear, int $semesterNumber, int $specializationId)
+    {
+        $specialization = $this->specializationManager->getSpecializationById($specializationId);
+        $semester = $this->academicYearManager->getSemesterByAcademicYearNameAndNumber($academicYear, $semesterNumber);
+
+        $result = $this->getEntityManager()
+            ->createQuery(' MATCH (spec:Specialization)<-[r:PART_OF*]-(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId} return a;')
+            ->addEntityMapping('a', TeachingActivity::class, Query::HYDRATE_RAW)
+            ->setParameter('semId', $semester->getId())
+            ->setParameter('specId', $specialization->getId())
+            ->getResult();
+
+
+        $activities = array();
+        foreach ($result as $act) {
+            $activities[] = $this->getPropertiesFromNode($act['a']);
+        }
+
+        return $activities;
+    }
+
 
     /**
      * @param int $specializationId
@@ -187,11 +323,10 @@ class ActivityManagerService
 
         try {
             $data = $this->academicYearService->getActivityDetailsOnDate($date, $yearOfStudy, $specialization->getSpecializationCategory());
-        }catch (HttpException $exception){
-            if($exception->getStatusCode() == Response::HTTP_NOT_FOUND){
+        } catch (RequestException $exception) {
+            if ($exception->getResponse()->getStatusCode() == Response::HTTP_NOT_FOUND) {
                 return array();
             }
-
             throw $exception;
         }
 
@@ -209,8 +344,8 @@ class ActivityManagerService
 
         switch ($correspondingActivity) {
             case 'PREDARE':
-                $dayNumber = (int) date('w', $date->getTimestamp());
-                $result =  $this->getEntityManager()
+                $dayNumber = (int)date('w', $date->getTimestamp());
+                $result = $this->getEntityManager()
                     ->createQuery(' MATCH (spec:Participant)<-[r:PART_OF*]-(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId}   AND a.day = {dayNum}  AND a.weekType = \'every\' OR  a.weekType = {weekT}  return a;')
                     ->addEntityMapping('a', TeachingActivity::class, Query::HYDRATE_RAW)
                     ->setParameter('semId', $semester->getId())
@@ -224,7 +359,7 @@ class ActivityManagerService
         }
 
         $activities = array();
-        foreach ($result as $act){
+        foreach ($result as $act) {
             $activities[] = $this->getPropertiesFromNode($act['a']);
         }
 
@@ -252,10 +387,11 @@ class ActivityManagerService
                 $series->getYearOfStudy(),
                 $series->getSpecialization()->getSpecializationCategory()
             );
-        }catch (HttpException $exception){
-            if($exception->getStatusCode() != Response::HTTP_NOT_FOUND){
-                throw $exception;
+        } catch (RequestException $exception) {
+            if ($exception->getResponse()->getStatusCode() == Response::HTTP_NOT_FOUND) {
+                return array();
             }
+            throw $exception;
         }
 
         $weekNumber = $data['weekNumber'];
@@ -275,7 +411,7 @@ class ActivityManagerService
         switch ($correspondingActivity) {
             case 'PREDARE':
 //                $dayNumber = (int) date('w', $date->getTimestamp());
-                $result =  $this->getEntityManager()
+                $result = $this->getEntityManager()
                     ->createQuery('MATCH (spec:Participant)-[r:PART_OF*0..]->(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId} AND (a.weekType = \'every\' OR  a.weekType = {weekT})  return a;')
                     ->addEntityMapping('a', TeachingActivity::class, Query::HYDRATE_RAW)
                     ->setParameter('semId', $semester->getId())
@@ -285,29 +421,29 @@ class ActivityManagerService
                     ->getResult();
                 break;
             case 'EXAMINARE':
-                return array('TYPE'=> "EXAM");
+                return array();
                 break;
 
             case 'PRACTICA':
 
                 return array(
                     array(
-                        'activityCategory'=> 'practice',
+                        'activityCategory' => 'practice',
                         "activityName" => $data['activity']['activityName'],
                         'period' => $data['activity']['period']
                     )
-                );break;
+                );
+                break;
 
             case 'LIBER':
-                return array(
-                );
+                return array();
                 break;
             default:
                 throw new HttpException(Response::HTTP_NOT_FOUND, 'No activities were founded on this day');
         }
 
         $activities = array();
-        foreach ($result as $act){
+        foreach ($result as $act) {
             $activities[] = $this->getPropertiesFromNode($act['a']);
         }
 
@@ -321,7 +457,7 @@ class ActivityManagerService
      */
     public function getActivitiesForTeacherOnDate(int $teacherId, \DateTime $date)
     {
-        $student = $this->studentManager->getStudentById($studentId);
+        $student = $this->studentManager->getStudentById($teacherId);
 
         $data = array();
 
@@ -331,8 +467,8 @@ class ActivityManagerService
                 $student->getSubSeries()->getSeries()->getYearOfStudy(),
                 $student->getSubSeries()->getSeries()->getSpecialization()->getSpecializationCategory()
             );
-        }catch (HttpException $exception){
-            if($exception->getStatusCode() != Response::HTTP_NOT_FOUND){
+        } catch (HttpException $exception) {
+            if ($exception->getStatusCode() != Response::HTTP_NOT_FOUND) {
                 throw $exception;
             }
         }
@@ -351,8 +487,8 @@ class ActivityManagerService
 
         switch ($correspondingActivity) {
             case 'PREDARE':
-                $dayNumber = (int) date('w', $date->getTimestamp());
-                $result =  $this->getEntityManager()
+                $dayNumber = (int)date('w', $date->getTimestamp());
+                $result = $this->getEntityManager()
                     ->createQuery(' MATCH (spec:Participant)<-[r:PART_OF*]-(p:Participant)-[:PARTICIPATE]->(a:Activity)-[:ON_SEMESTER]->(sem:Semester) where ID(sem) = {semId} AND ID(spec) = {specId}   AND a.day = {dayNum}  AND a.weekType = \'every\' OR  a.weekType = {weekT}  return a;')
                     ->addEntityMapping('a', TeachingActivity::class, Query::HYDRATE_RAW)
                     ->setParameter('semId', $semester->getId())
@@ -366,7 +502,7 @@ class ActivityManagerService
         }
 
         $activities = array();
-        foreach ($result as $act){
+        foreach ($result as $act) {
             $activities[] = $this->getPropertiesFromNode($act['a']);
         }
 
@@ -377,14 +513,17 @@ class ActivityManagerService
      * @param Node $node
      * @return array
      */
-    private function getPropertiesFromNode($node){
+    private function getPropertiesFromNode($node)
+    {
         $id = $node->identity();
-        $values =  $node->values();
+        $values = $node->values();
         $values['id'] = $id;
         $values['semester'] = $this->academicYearManager->getSemesterByActivityId($id);
         $values['teacher'] = $this->teacherManager->getTeacherByActivityId($id);
         $values['subject'] = $this->subjectManager->getSubjectByActivityId($id);
         $values['participants'] = $this->participantManager->getParticipantsByActivityId($id);
+        $values['location'] = $this->locationManager->getLocationNameByActivityId($id);
+        $values['type'] = $node->labels();
 
         return $values;
     }
@@ -605,4 +744,61 @@ class ActivityManagerService
         return $this->serializer->decode($fileContent, 'csv');
     }
 
+    public function throwNotFoundExceptionOnNull($activity)
+    {
+        if ($activity === null) {
+            throw new HttpException(Response::HTTP_NOT_FOUND, 'No activity');
+        }
+    }
+
+
+    /**
+     * @param int $activityId
+     */
+    private function removeOldLocationRelation($activityId){
+        $this->getEntityManager()
+            ->createQuery('MATCH (a:Activity)-[r:IN]-() WHERE id(a)= {actId} DELETE r')
+            ->setParameter('actId', $activityId)
+            ->execute();
+    }
+
+    /**
+     * @param int $activityId
+     */
+    private function removeOldSubjectRelation($activityId){
+        $this->getEntityManager()
+            ->createQuery('MATCH (a:Activity)-[r:LINKED_TO]-() WHERE id(a)= {actId} DELETE r')
+            ->setParameter('actId', $activityId)
+            ->execute();
+    }
+
+    /**
+     * @param int $activityId
+     */
+    private function removeOldTeacherRelation($activityId){
+        $this->getEntityManager()
+            ->createQuery('MATCH (a:Activity)-[r:TEACHED_BY]-() WHERE id(a)= {actId} DELETE r')
+            ->setParameter('actId', $activityId)
+            ->execute();
+    }
+
+    /**
+     * @param int $activityId
+     */
+    private function removeOldSemesterRelation($activityId){
+        $this->getEntityManager()
+            ->createQuery('MATCH (a:Activity)-[r:ON_SEMESTER]-() WHERE id(a)= {actId} DELETE r')
+            ->setParameter('actId', $activityId)
+            ->execute();
+    }
+
+    /**
+     * @param int $activityId
+     */
+    private function removeOldParticipantsRelation($activityId){
+        $this->getEntityManager()
+            ->createQuery('MATCH (a:Activity)-[r:PARTICIPATE]-() WHERE id(a)= {actId} DELETE r')
+            ->setParameter('actId', $activityId)
+            ->execute();
+    }
 }
