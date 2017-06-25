@@ -81,9 +81,9 @@ class TeachingActivityRestController extends FOSRestController
     }
 
     /**
-     * @Rest\Post("/file.{_format}")
+     * @Rest\Post("/file/{academicYear}/{semesterNumber}.{_format}")
      *
-     * @Rest\RequestParam(name="academicYear", description="Academic year name   ex: 2016-2017")
+     * @Rest\RequestParam(name="academicYear", nullable=false, description="Academic year name   ex: 2016-2017")
      * @Rest\RequestParam(name="semesterNumber", description="Semester number   ex: 1,2")
      * @Rest\FileParam(name="file", strict=true, description="Csv file")
      *
@@ -98,29 +98,21 @@ class TeachingActivityRestController extends FOSRestController
      * )
      *
      * @param ParamFetcher $paramFetcher
+     * @param $academicYear
+     * @param $semesterNumber
      * @return Response
      */
-    public function csvLoadAction(ParamFetcher $paramFetcher)
+    public function csvLoadAction(ParamFetcher $paramFetcher, $academicYear, $semesterNumber)
     {
         /** @var UploadedFile $file */
         $file = $paramFetcher->get('file');
-        $academicYearName = $paramFetcher->get('academicYear');
-        $semesterNumber = $paramFetcher->get('semesterNumber');
 
         /** @var ActivityManagerService $activityManager */
         $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
 
+        $result = $activityManager->loadActivitiesFromCsv($academicYear, $semesterNumber, file_get_contents($file->getRealPath()));
 
-//        echo($file->guessClientExtension());die;
-//
-//        if(strtolower($file->getExtension()) != 'csv'){
-//            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid file extension:'.$file->getExtension().' extected csv');
-//        }
-
-        $activityManager->loadActivitiesFromCsv($academicYearName, $semesterNumber, file_get_contents($file->getRealPath()));
-
-
-        return new Response('created', Response::HTTP_CREATED);
+        return new Response('', Response::HTTP_OK);
     }
 
 
@@ -173,7 +165,7 @@ class TeachingActivityRestController extends FOSRestController
      * @Rest\RequestParam(name="teacher", nullable=true, allowBlank=true, description="Person id that teach this activity ")
      * @Rest\RequestParam(name="subject", nullable=true, allowBlank=true, description="Subject id related with this activity")
      * @Rest\RequestParam(name="location", nullable=true, allowBlank=true, description="Location in witch the activity is placed")
-     * @Rest\RequestParam(name="participants", nullable=true, allowBlank=true, description="A list of participants ex: {123, 143}")
+     * @Rest\RequestParam(name="participants", description="A list of participants ex: {123, 143}")
      *
      * @ApiDoc(
      *     description="Update subject",

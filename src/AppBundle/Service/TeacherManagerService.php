@@ -159,10 +159,23 @@ class TeacherManagerService
         }
     }
 
-    public function getTeacherByActivityId($activityId)
+    public function getTeacherByTeachingActivityId($activityId)
     {
         $teacher = $this->getEntityManager()
-            ->createQuery('MATCH (t:Teacher)-[:TEACHED_BY]->(act:Activity) WHERE ID(act) = {actId} RETURN t')
+            ->createQuery('MATCH (t:Teacher)-[:TEACHED_BY]->(act:TeachingActivity) WHERE ID(act) = {actId} RETURN t')
+            ->addEntityMapping('t', Teacher::class, Query::HYDRATE_RAW)
+            ->setParameter('actId', $activityId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundExceptionOnNullTeacher($teacher);
+
+        return $this->getPropertiesFromTeacherNode($teacher[0]['t']);
+    }
+
+    public function getTeacherByEvaluationActivityId($activityId)
+    {
+        $teacher = $this->getEntityManager()
+            ->createQuery('MATCH (t:Teacher)<-[:SUPERVISED_BY]-(act:EvaluationActivity) WHERE ID(act) = {actId} RETURN t')
             ->addEntityMapping('t', Teacher::class, Query::HYDRATE_RAW)
             ->setParameter('actId', $activityId)
             ->getOneOrNullResult();

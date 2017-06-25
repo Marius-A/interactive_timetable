@@ -6,8 +6,8 @@ namespace AppBundle\Model\NodeEntity;
 use AppBundle\Model\NodeEntity\Util\ActivityCategory;
 use AppBundle\Model\NodeEntity\Util\DayOfWeek;
 use AppBundle\Model\NodeEntity\Util\WeekType;
-use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
+use GraphAware\Neo4j\OGM\Common\Collection;
 
 /**
  * Class TeachingActivity
@@ -121,7 +121,6 @@ class TeachingActivity extends Activity
         $this->participants = $participants;
         return $this;
     }
-
 
 
     /**
@@ -257,17 +256,18 @@ class TeachingActivity extends Activity
      * which is a value of any type other than a resource.
      * @since 5.4.0
      */
-    function jsonSerialize()
+    public function jsonSerialize()
     {
         return array(
-            'semester'=>$this->semester,
-            'weekType'=>$this->weekType,
-            'day'=>$this->day,
-            'hour'=>$this->hour,
-            'duration'=>$this->duration,
-            'teacher' =>$this->teacher,
-            'subject' => $this->subject,
-            'participants' => $this->participants->toArray()
+            'semester' => $this->semester->getKey(),
+            'weekType' => $this->weekType,
+            'day' => $this->day,
+            'hour' => $this->hour,
+            'duration' => $this->duration,
+            'type'=> $this->activityCategory,
+            'location'=> $this->location->getFullName(),
+            'teacher' => $this->teacher->getName() . ' ' . $this->teacher->getSurname(),
+            'subject' => $this->subject->getFullName()
         );
     }
 }
