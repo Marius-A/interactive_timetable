@@ -8,7 +8,6 @@ use GraphAware\Neo4j\OGM\Annotations as OGM;
  * Class Person
  * @package AppBundle\Model
  *
- * @OGM\Node(label="Person")
  */
 abstract class Person extends BaseModel
 {

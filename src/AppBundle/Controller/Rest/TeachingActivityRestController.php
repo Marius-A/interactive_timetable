@@ -3,10 +3,12 @@
 
 namespace AppBundle\Controller\Rest;
 
+use AppBundle\Model\NodeEntity\Util\ActivityCategory;
 use AppBundle\Service\ActivityManagerService;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
 use FOS\RestBundle\Request\ParamFetcher;
+use JMS\Serializer\Serializer;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
@@ -79,9 +81,9 @@ class TeachingActivityRestController extends FOSRestController
     }
 
     /**
-     * @Rest\Post("/file.{_format}")
+     * @Rest\Post("/file/{academicYear}/{semesterNumber}.{_format}")
      *
-     * @Rest\RequestParam(name="academicYear", description="Academic year name   ex: 2016-2017")
+     * @Rest\RequestParam(name="academicYear", nullable=false, description="Academic year name   ex: 2016-2017")
      * @Rest\RequestParam(name="semesterNumber", description="Semester number   ex: 1,2")
      * @Rest\FileParam(name="file", strict=true, description="Csv file")
      *
@@ -96,28 +98,131 @@ class TeachingActivityRestController extends FOSRestController
      * )
      *
      * @param ParamFetcher $paramFetcher
+     * @param $academicYear
+     * @param $semesterNumber
      * @return Response
      */
-    public function csvLoadAction(ParamFetcher $paramFetcher)
+    public function csvLoadAction(ParamFetcher $paramFetcher, $academicYear, $semesterNumber)
     {
         /** @var UploadedFile $file */
         $file = $paramFetcher->get('file');
-        $academicYearName = $paramFetcher->get('academicYear');
-        $semesterNumber = $paramFetcher->get('semesterNumber');
 
         /** @var ActivityManagerService $activityManager */
         $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
 
+        $result = $activityManager->loadActivitiesFromCsv($academicYear, $semesterNumber, file_get_contents($file->getRealPath()));
 
-//        echo($file->guessClientExtension());die;
-//
-//        if(strtolower($file->getExtension()) != 'csv'){
-//            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid file extension:'.$file->getExtension().' extected csv');
-//        }
-
-        $activityManager->loadActivitiesFromCsv($academicYearName, $semesterNumber, file_get_contents($file->getRealPath()));
+        return new Response('', Response::HTTP_OK);
+    }
 
 
-        return new Response('created', Response::HTTP_CREATED);
+    /**
+     * @Rest\Get("/all/{academicYear}/{semesterNumber}/{specialization}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get activities form a semester and specialization",
+     *     section="Activity",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when ....",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param string $academicYear
+     * @param int $semesterNumber
+     * @param int $specialization
+     * @param $_format
+     * @return Response
+     * @internal param $date
+     */
+    public function getAllActivitiesForSpecializationOnSemester(string $academicYear, int $semesterNumber,int $specialization, $_format)
+    {
+        /** @var ActivityManagerService $activityManager */
+        $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
+        /** @var Serializer $serializer */
+        $serializer = $this->get('jms_serializer');
+
+        $activities = $activityManager->getAllActivitiesForSemesterAndSpecialization($academicYear, $semesterNumber, $specialization);
+
+        return new Response(
+            $serializer->serialize($activities, $_format),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
+     * @Rest\Put("/{id}.{_format}")
+     *
+     * @Rest\RequestParam(name="teacher", nullable=true, allowBlank=true, description="Subject short-name ex: D.A.D.R")
+     * @Rest\RequestParam(name="activityCategory", nullable=true, allowBlank=true, description="Activity category   ex: course,seminar,exam")
+     * @Rest\RequestParam(name="academicYear", nullable=true, allowBlank=true, description="Academic year name   ex: 2016-2017")
+     * @Rest\RequestParam(name="semesterNumber", nullable=true, allowBlank=true, description="Semester number   ex: 1,2")
+     * @Rest\RequestParam(name="weekType", strict=false, default="every", nullable=true, allowBlank=true, description="Week type   ex: odd, even, every")
+     * @Rest\RequestParam(name="day", nullable=true, allowBlank=true, description="Day   ex: 1-7")
+     * @Rest\RequestParam(name="hour", nullable=true, allowBlank=true, description="Hour   ex: 08-18")
+     * @Rest\RequestParam(name="duration", nullable=true, allowBlank=true, default=2, description="Activity duration in hours ex: 1,2")
+     * @Rest\RequestParam(name="teacher", nullable=true, allowBlank=true, description="Person id that teach this activity ")
+     * @Rest\RequestParam(name="subject", nullable=true, allowBlank=true, description="Subject id related with this activity")
+     * @Rest\RequestParam(name="location", nullable=true, allowBlank=true, description="Location in witch the activity is placed")
+     * @Rest\RequestParam(name="participants", description="A list of participants ex: {123, 143}")
+     *
+     * @ApiDoc(
+     *     description="Update subject",
+     *     section="Activities",
+     *     statusCodes={
+     *         200="Returned when successful",
+     *         404="Returned when subject was not founded",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $id
+     * @param ParamFetcher $paramFetcher
+     * @return Response
+     */
+    public function updateAction(int $id, ParamFetcher $paramFetcher)
+    {
+
+        /** @var ActivityManagerService $activityManager */
+        $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
+
+        $changes = $paramFetcher->all();
+
+        $activityManager->updateTeachingActivity($id, $changes);
+
+        return new Response('updated', Response::HTTP_OK);
+    }
+
+    /**
+     * @Rest\Get("/all-types.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get all activity types",
+     *     section="Activity",
+     *     statusCodes={
+     *         200="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param $_format
+     * @return Response
+     */
+    public function getAllTeachingActivityTypes($_format)
+    {
+        /** @var Serializer $serializer */
+        $serializer = $this->get('jms_serializer');
+
+        $activityTypes = array(
+            ActivityCategory::COURSE,
+            ActivityCategory::SEMINAR,
+            ActivityCategory::LABORATORY,
+        );
+
+        return new Response(
+            $serializer->serialize($activityTypes, $_format),
+            Response::HTTP_OK
+        );
     }
 }

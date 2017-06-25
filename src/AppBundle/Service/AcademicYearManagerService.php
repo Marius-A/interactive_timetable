@@ -112,6 +112,24 @@ class AcademicYearManagerService
     }
 
     /**
+     * @return array
+     */
+    public function getAllYears()
+    {
+        $result = $this->getEntityManager()
+            ->createQuery('MATCH (ac:AcademicYear) RETURN ac')
+            ->addEntityMapping('ac', AcademicYear::class, Query::HYDRATE_RAW)
+            ->getResult();
+
+        $years = array();
+        foreach ($result as $item){
+            $years[] = $item['ac']->values();
+        }
+
+        return $years;
+    }
+
+    /**
      * @param AcademicYear $academicYear
      * @return Semester[]|Collection
      */
@@ -214,8 +232,20 @@ class AcademicYearManagerService
         return $this->getPropertiesFromSemesterNode($semester[0]['s']);
     }
 
+    public function getAcademicYearDetailsByActivityId($activityId)
+    {
+        $academicYear = $this->getEntityManager()
+            ->createQuery('MATCH (s:AcademicYear)<-[:ON_YEARS]-(act:Activity) WHERE ID(act) = {actId} RETURN s')
+            ->addEntityMapping('s', AcademicYear::class, Query::HYDRATE_RAW)
+            ->setParameter('actId', $activityId)
+            ->getOneOrNullResult();
 
-    public function getAcademicYearBySemesterId($semesterId)
+        $this->throwNotFoundExceptionIfIsAcademicYearIsNullNull($academicYear);
+
+        return $this->getPropertiesFromAcademicYearNode($academicYear[0]['s']);
+    }
+
+    public function getAcademicYearDetailsBySemesterId($semesterId)
     {
         $ac = $this->getEntityManager()
             ->createQuery('MATCH (ac:AcademicYear)<-[:HAVE]-(sem:Semester) WHERE ID(sem) = {semId} RETURN ac')
@@ -237,7 +267,20 @@ class AcademicYearManagerService
         $id = $node->identity();
         $values = $node->values();
         $values['id'] = $id;
-        $values['academicYear'] = $this->getAcademicYearBySemesterId($id);
+        $values['academicYear'] = $this->getAcademicYearDetailsBySemesterId($id);
+
+        return $values;
+    }
+
+    /**
+     * @param \GraphAware\Common\Type\Node $node
+     * @return array
+     */
+    private function getPropertiesFromAcademicYearNode($node)
+    {
+        $id = $node->identity();
+        $values = $node->values();
+        $values['id'] = $id;
 
         return $values;
     }

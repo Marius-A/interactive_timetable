@@ -121,6 +121,36 @@ class AcademicYearRestController extends FOSRestController
     }
 
     /**
+     * @Rest\Get("/.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get all academic years",
+     *     section="Academic year",
+     *     statusCodes={
+     *         200="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param string $_format
+     * @return Response
+     * @internal param $id
+     */
+    public function getAllAction($_format)
+    {
+        /** @var AcademicYearManagerService $academicYearManager */
+        $academicYearManager = $this->get(AcademicYearManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $academicYears = $academicYearManager->getAllYears();
+
+        return new Response(
+            $serializer->serialize($academicYears, $_format),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
      * @Rest\Put("/{id}.{_format}")
      *
      * @Rest\RequestParam(name="name", default=null, description="New academic year name   ex: 2016-2017")

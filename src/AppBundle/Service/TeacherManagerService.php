@@ -92,6 +92,24 @@ class TeacherManagerService
     }
 
     /**
+     * @return array
+     */
+    public function getAllTeachers()
+    {
+        $result =  $this->getEntityManager()
+            ->createQuery("MATCH (t:Teacher) RETURN t")
+            ->addEntityMapping('t', Teacher::class, Query::HYDRATE_RAW)
+            ->getResult();
+
+        $teachers = array();
+        foreach ($result as $teacher){
+            $teachers[] = $this->getPropertiesFromTeacherNode($teacher['t']);
+        }
+
+        return $teachers;
+    }
+
+    /**
      * @param string $partialName
      * @return Teacher[]
      */
@@ -100,7 +118,7 @@ class TeacherManagerService
         $partialName = '.*' . strtolower($partialName) . '.*';
         return $this->getEntityManager()
             ->createQuery("MATCH (t:Teacher) WHERE toLower(t.name) =~ {name} OR toLower(t.surname) =~ {name}  RETURN t")
-            ->addEntityMapping('s', Teacher::class)
+            ->addEntityMapping('t', Teacher::class)
             ->setParameter('name', $partialName)
             ->getResult();
     }
@@ -141,10 +159,23 @@ class TeacherManagerService
         }
     }
 
-    public function getTeacherByActivityId($activityId)
+    public function getTeacherByTeachingActivityId($activityId)
     {
         $teacher = $this->getEntityManager()
-            ->createQuery('MATCH (t:Teacher)-[:TEACHED_BY]->(act:Activity) WHERE ID(act) = {actId} RETURN t')
+            ->createQuery('MATCH (t:Teacher)-[:TEACHED_BY]->(act:TeachingActivity) WHERE ID(act) = {actId} RETURN t')
+            ->addEntityMapping('t', Teacher::class, Query::HYDRATE_RAW)
+            ->setParameter('actId', $activityId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundExceptionOnNullTeacher($teacher);
+
+        return $this->getPropertiesFromTeacherNode($teacher[0]['t']);
+    }
+
+    public function getTeacherByEvaluationActivityId($activityId)
+    {
+        $teacher = $this->getEntityManager()
+            ->createQuery('MATCH (t:Teacher)<-[:SUPERVISED_BY]-(act:EvaluationActivity) WHERE ID(act) = {actId} RETURN t')
             ->addEntityMapping('t', Teacher::class, Query::HYDRATE_RAW)
             ->setParameter('actId', $activityId)
             ->getOneOrNullResult();

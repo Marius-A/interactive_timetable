@@ -4,6 +4,7 @@
 namespace AppBundle\Controller\Rest;
 
 use AppBundle\Service\AcademicYearManagerService;
+use AppBundle\Service\StudentManagerService;
 use AppBundle\Service\TeacherManagerService;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
@@ -12,32 +13,33 @@ use Nelmio\ApiDocBundle\Annotation\ApiDoc;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Class TeacherRestController
+ * Class StudentRestController
  * @package AppBundle\Controller\Rest
  *
  * @Rest\Route(
- *     "api/v1/teacher",
+ *     "api/v1/student",
  *     defaults={"_format": "json"},
  *     requirements={
  *         "_format": "xml|json"
  *     }
  * )
  */
-class TeacherRestController extends FOSRestController
+class StudentRestController extends FOSRestController
 {
     /**
      * @Rest\Post("/.{_format}")
      *
-     * @Rest\RequestParam(name="name", description="Teacher name")
-     * @Rest\RequestParam(name="surname", description="Teacher surname")
-     * @Rest\RequestParam(name="email", requirements="^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$", description="Teacher email")
+     * @Rest\RequestParam(name="name", description="Student name")
+     * @Rest\RequestParam(name="surname", description="Student surname")
+     * @Rest\RequestParam(name="email", requirements="(.+)@(.+){2,}\.(.+){2,}", description="Student email")
+     * @Rest\RequestParam(name="sub-series", description="Student subseries")
      *
      * @ApiDoc(
-     *     description="Register a new teacher",
-     *     section="Teachers",
+     *     description="Register a new student",
+     *     section="Students",
      *     statusCodes={
      *         201="Returned when successful",
-     *         409="Returned when an teacher tith the same name and surname already exists",
+     *         409="Returned when an student with the same name and surname already exists",
      *         500="Returned on internal server error",
      *     }
      * )
@@ -47,14 +49,15 @@ class TeacherRestController extends FOSRestController
      */
     public function postAction(ParamFetcher $paramFetcher)
     {
-        /** @var TeacherManagerService $teacherManager */
-        $teacherManager = $this->get(TeacherManagerService::SERVICE_NAME);
+        /** @var StudentManagerService $studentManagerService */
+        $studentManagerService = $this->get(StudentManagerService::SERVICE_NAME);
 
         $name = $paramFetcher->get('name');
         $surname = $paramFetcher->get('surname');
         $email = $paramFetcher->get('email');
+        $subSeriesId = $paramFetcher->get('sub-series');
 
-        $teacherManager->createNew($name, $surname, $email);
+        $studentManagerService->createNew($name, $surname, $email, $subSeriesId);
 
         return new Response('created', Response::HTTP_CREATED);
     }
@@ -63,11 +66,11 @@ class TeacherRestController extends FOSRestController
      * @Rest\Get("/{id}.{_format}")
      *
      * @ApiDoc(
-     *     description="Get teacher by id",
-     *     section="Teachers",
+     *     description="Get student by id",
+     *     section="Students",
      *     statusCodes={
      *         201="Returned when successful",
-     *         404="Returned when the teacher with the given id is not founded",
+     *         404="Returned when the student with the given id is not founded",
      *         500="Returned on internal server error",
      *     }
      * )
@@ -78,43 +81,50 @@ class TeacherRestController extends FOSRestController
      */
     public function getByIdAction($id, $_format)
     {
-        /** @var TeacherManagerService $teacherManager */
-        $teacherManager = $this->get(TeacherManagerService::SERVICE_NAME);
+        /** @var StudentManagerService $studentManagerService */
+        $studentManagerService = $this->get(StudentManagerService::SERVICE_NAME);
+
         $serializer = $this->get('serializer');
 
-        $academicYear = $teacherManager->getTeacherById($id);
+        $student = $studentManagerService->getStudentDetailsById($id);
 
         return new Response(
-            $serializer->serialize($academicYear, $_format),
+            $serializer->serialize($student, $_format),
             Response::HTTP_OK
         );
     }
 
     /**
-     * @Rest\Get("/.{_format}")
+     * @Rest\Post("/email.{_format}")
+     *
+     * @Rest\RequestParam(name="email", description="Student email")
      *
      * @ApiDoc(
-     *     description="Get all teachers",
-     *     section="Teachers",
+     *     description="Get student by email",
+     *     section="Students",
      *     statusCodes={
      *         201="Returned when successful",
+     *         404="Returned when the student with the given email is not founded",
      *         500="Returned on internal server error",
      *     }
      * )
      *
+     * @param string $email
      * @param string $_format
      * @return Response
      */
-    public function getAllAction($_format)
+    public function getByEmailAction(ParamFetcher $paramFetcher, $_format)
     {
-        /** @var TeacherManagerService $teacherManager */
-        $teacherManager = $this->get(TeacherManagerService::SERVICE_NAME);
+        /** @var StudentManagerService $studentManagerService */
+        $studentManagerService = $this->get(StudentManagerService::SERVICE_NAME);
         $serializer = $this->get('serializer');
 
-        $teachers = $teacherManager->getAllTeachers();
+        $email = $paramFetcher->get('email');
+
+        $student = $studentManagerService->getStudentDetailsByEmail($email);
 
         return new Response(
-            $serializer->serialize($teachers, $_format),
+            $serializer->serialize($student, $_format),
             Response::HTTP_OK
         );
     }
@@ -124,14 +134,15 @@ class TeacherRestController extends FOSRestController
      *
      * @Rest\QueryParam(name="name", description="New name")
      * @Rest\QueryParam(name="surname", description="New surname")
-     * @Rest\QueryParam(name="email",requirements="^\w+@[a-zA-Z_]+?\.[a-zA-Z]{2,3}$", description="New email address")
+     * @Rest\QueryParam(name="email",requirements="(.+)@(.+){2,}\.(.+){2,}", description="New email address")
+     * @Rest\QueryParam(name="sub-series", description="New subSeries")
      *
      * @ApiDoc(
-     *     description="Update teacher with the given id",
-     *     section="Teachers",
+     *     description="Update student with the given id",
+     *     section="Students",
      *     statusCodes={
      *         200="Returned when successful",
-     *         404="Returned when the teacher with the given id is not founded",
+     *         404="Returned when the student with the given id is not founded",
      *         500="Returned on internal server error",
      *     }
      * )
@@ -142,15 +153,15 @@ class TeacherRestController extends FOSRestController
      */
     public function updateAction(int $id, ParamFetcher $paramFetcher)
     {
-        /** @var TeacherManagerService $teacherManager */
-        $teacherManager = $this->get(TeacherManagerService::SERVICE_NAME);
+        /** @var StudentManagerService $studentManagerService */
+        $studentManagerService = $this->get(StudentManagerService::SERVICE_NAME);
 
         $name = $paramFetcher->get('name');
         $surname = $paramFetcher->get('surname');
         $email = $paramFetcher->get('email');
+        $subSeries = $paramFetcher->get('sub-series');
 
-
-        $teacherManager->updateTeacher($name, $surname, $email);
+        $studentManagerService->updateStudent($id, $name, $surname, $email, (int) $subSeries);
 
         return new Response('updated', Response::HTTP_OK);
     }
@@ -159,11 +170,11 @@ class TeacherRestController extends FOSRestController
      * @Rest\Delete("/{id}.{_format}")
      *
      * @ApiDoc(
-     *     description="Remove teacher with a given id",
-     *     section="Teachers",
+     *     description="Remove student with a given id",
+     *     section="Students",
      *     statusCodes={
      *         200="Returned when successful",
-     *         404="Returned when the teacher with the given id is not founded",
+     *         404="Returned when the student with the given id is not founded",
      *         500="Returned on internal server error",
      *     }
      * )
@@ -173,10 +184,10 @@ class TeacherRestController extends FOSRestController
      */
     public function removeAction(int $id)
     {
-        /** @var TeacherManagerService $teacherManager */
-        $teacherManager = $this->get(TeacherManagerService::SERVICE_NAME);
+        /** @var StudentManagerService $studentManagerService */
+        $studentManagerService = $this->get(StudentManagerService::SERVICE_NAME);
 
-        $teacherManager->removeTeacherById($id);
+        $studentManagerService->removeStudentById($id);
 
         return new Response('removed', Response::HTTP_OK);
     }
