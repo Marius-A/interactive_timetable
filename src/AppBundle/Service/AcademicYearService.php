@@ -19,6 +19,8 @@ class AcademicYearService
 
     const WEEK_BY_DATE_METHOD = '/get-week-by-date';
 
+    const ACTIVITIES_BY_DATE = '/activities-by-date';
+
     /** @var  string */
     private $apiUrl;
 
@@ -40,7 +42,7 @@ class AcademicYearService
      * @see SpecializationCategory
      * @return array
      */
-    public function getActivityDetailsOnDate(\DateTime $date, $yearOfStudy, $specialization)
+    public function getActivityDetailForYearOfStudyOnDate(\DateTime $date, $yearOfStudy, $specialization)
     {
         $client = $this->getClient($this->apiUrl);
 
@@ -56,6 +58,27 @@ class AcademicYearService
 
         return json_decode($result->getBody()->getContents(), true);
     }
+
+    /**
+     * @param \DateTime $date
+     * @see SpecializationCategory
+     * @return array
+     */
+    public function getActivityDetailsOnDate(\DateTime $date)
+    {
+        $client = $this->getClient($this->apiUrl);
+
+
+        $result = $client->post(static::ACTIVITIES_BY_DATE, array(
+            'json' => array(
+                "date" => $date->format('d-m-Y')
+            )
+        ));
+
+
+        return json_decode($result->getBody()->getContents(), true)['data'];
+    }
+
 
     /**
      * @return Client

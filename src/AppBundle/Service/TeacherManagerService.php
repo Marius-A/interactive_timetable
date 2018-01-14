@@ -159,10 +159,10 @@ class TeacherManagerService
         }
     }
 
-    public function getTeacherByActivityId($activityId)
+    public function getTeacherByTeachingActivityId($activityId)
     {
         $teacher = $this->getEntityManager()
-            ->createQuery('MATCH (t:Teacher)-[:TEACHED_BY]->(act:Activity) WHERE ID(act) = {actId} RETURN t')
+            ->createQuery('MATCH (t:Teacher)-[:TEACHED_BY]->(act:TeachingActivity) WHERE ID(act) = {actId} RETURN t')
             ->addEntityMapping('t', Teacher::class, Query::HYDRATE_RAW)
             ->setParameter('actId', $activityId)
             ->getOneOrNullResult();
@@ -171,6 +171,38 @@ class TeacherManagerService
 
         return $this->getPropertiesFromTeacherNode($teacher[0]['t']);
     }
+
+    public function getTeacherByEvaluationActivityId($activityId)
+    {
+        $teacher = $this->getEntityManager()
+            ->createQuery('MATCH (t:Teacher)<-[:SUPERVISED_BY]-(act:EvaluationActivity) WHERE ID(act) = {actId} RETURN t')
+            ->addEntityMapping('t', Teacher::class, Query::HYDRATE_RAW)
+            ->setParameter('actId', $activityId)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundExceptionOnNullTeacher($teacher);
+
+        return $this->getPropertiesFromTeacherNode($teacher[0]['t']);
+    }
+
+    /**
+     * @param $email
+     * @return array
+     * @internal param int $id
+     */
+    public function getTeacherDetailsByEmail($email)
+    {
+        $teacher = $this->getEntityManager()
+            ->createQuery("MATCH (s:Teacher) WHERE s.email = {email} RETURN s")
+            ->addEntityMapping('s', Teacher::class, Query::HYDRATE_RAW)
+            ->setParameter('email', $email)
+            ->getOneOrNullResult();
+
+        $this->throwNotFoundExceptionOnNullTeacher($teacher);
+
+        return $this->getPropertiesFromTeacherNode($teacher[0]['s']);
+    }
+
 
     /**
      * @param \GraphAware\Common\Type\Node $node

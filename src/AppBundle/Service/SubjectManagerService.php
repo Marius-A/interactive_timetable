@@ -137,6 +137,24 @@ class SubjectManagerService
     }
 
     /**
+     * @return array
+     */
+    public function getAllSubjectsDetails()
+    {
+        $result =  $this->getEntityManager()
+            ->createQuery("MATCH (s:Subject) RETURN s")
+            ->addEntityMapping('l', Subject::class, Query::HYDRATE_RAW)
+            ->getResult();
+
+        $subjects = array();
+        foreach ($result as $node){
+            $subjects[] = $this->getPropertiesFromSubjectNode($node['s']);
+        }
+
+        return $subjects;
+    }
+
+    /**
      * @param string $partialName
      * @return Subject[]
      */

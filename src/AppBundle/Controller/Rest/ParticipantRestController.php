@@ -55,4 +55,33 @@ class ParticipantRestController extends FOSRestController
             Response::HTTP_OK
         );
     }
+
+    /**
+     * @Rest\Get("/departments.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get all departments recursivly",
+     *     section="Participants",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param string $_format
+     * @return Response
+     */
+    public function getAllDepartmentsAction($_format)
+    {
+        /** @var ParticipantManagerService $participantManager */
+        $participantManager = $this->get(ParticipantManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $participants = $participantManager->getAllDepartments();
+
+        return new Response(
+            $serializer->serialize($participants, $_format),
+            Response::HTTP_OK
+        );
+    }
 }

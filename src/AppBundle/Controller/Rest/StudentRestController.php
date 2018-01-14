@@ -109,7 +109,7 @@ class StudentRestController extends FOSRestController
      *     }
      * )
      *
-     * @param string $email
+     * @param ParamFetcher $paramFetcher
      * @param string $_format
      * @return Response
      */

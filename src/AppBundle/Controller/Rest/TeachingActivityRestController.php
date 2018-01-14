@@ -44,7 +44,7 @@ class TeachingActivityRestController extends FOSRestController
      *
      * @ApiDoc(
      *     description="Create a new teaching activity",
-     *     section="Activity",
+     *     section="Teaching-Activities",
      *     statusCodes={
      *         201="Returned when successful",
      *         404="Returned when ....",
@@ -81,15 +81,15 @@ class TeachingActivityRestController extends FOSRestController
     }
 
     /**
-     * @Rest\Post("/file.{_format}")
+     * @Rest\Post("/file/{academicYear}/{semesterNumber}.{_format}")
      *
-     * @Rest\RequestParam(name="academicYear", description="Academic year name   ex: 2016-2017")
+     * @Rest\RequestParam(name="academicYear", nullable=false, description="Academic year name   ex: 2016-2017")
      * @Rest\RequestParam(name="semesterNumber", description="Semester number   ex: 1,2")
      * @Rest\FileParam(name="file", strict=true, description="Csv file")
      *
      * @ApiDoc(
      *     description="Load all teaching activities for a semester",
-     *     section="Activity",
+     *     section="Teaching-Activities",
      *     statusCodes={
      *         201="Returned when successful",
      *         404="Returned when ....",
@@ -98,29 +98,21 @@ class TeachingActivityRestController extends FOSRestController
      * )
      *
      * @param ParamFetcher $paramFetcher
+     * @param $academicYear
+     * @param $semesterNumber
      * @return Response
      */
-    public function csvLoadAction(ParamFetcher $paramFetcher)
+    public function csvLoadAction(ParamFetcher $paramFetcher, $academicYear, $semesterNumber)
     {
         /** @var UploadedFile $file */
         $file = $paramFetcher->get('file');
-        $academicYearName = $paramFetcher->get('academicYear');
-        $semesterNumber = $paramFetcher->get('semesterNumber');
 
         /** @var ActivityManagerService $activityManager */
         $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
 
+        $result = $activityManager->loadTeachingActivitiesFromCsv($academicYear, $semesterNumber, file_get_contents($file->getRealPath()));
 
-//        echo($file->guessClientExtension());die;
-//
-//        if(strtolower($file->getExtension()) != 'csv'){
-//            throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid file extension:'.$file->getExtension().' extected csv');
-//        }
-
-        $activityManager->loadActivitiesFromCsv($academicYearName, $semesterNumber, file_get_contents($file->getRealPath()));
-
-
-        return new Response('created', Response::HTTP_CREATED);
+        return new Response('', Response::HTTP_OK);
     }
 
 
@@ -129,7 +121,7 @@ class TeachingActivityRestController extends FOSRestController
      *
      * @ApiDoc(
      *     description="Get activities form a semester and specialization",
-     *     section="Activity",
+     *     section="Teaching-Activities",
      *     statusCodes={
      *         201="Returned when successful",
      *         404="Returned when ....",
@@ -173,11 +165,11 @@ class TeachingActivityRestController extends FOSRestController
      * @Rest\RequestParam(name="teacher", nullable=true, allowBlank=true, description="Person id that teach this activity ")
      * @Rest\RequestParam(name="subject", nullable=true, allowBlank=true, description="Subject id related with this activity")
      * @Rest\RequestParam(name="location", nullable=true, allowBlank=true, description="Location in witch the activity is placed")
-     * @Rest\RequestParam(name="participants", nullable=true, allowBlank=true, description="A list of participants ex: {123, 143}")
+     * @Rest\RequestParam(name="participants",  nullable=true, allowBlank=true, description="A list of participants ex: {123, 143}")
      *
      * @ApiDoc(
      *     description="Update subject",
-     *     section="Activities",
+     *     section="Teaching-Activities",
      *     statusCodes={
      *         200="Returned when successful",
      *         404="Returned when subject was not founded",
@@ -207,7 +199,7 @@ class TeachingActivityRestController extends FOSRestController
      *
      * @ApiDoc(
      *     description="Get all activity types",
-     *     section="Activity",
+     *     section="Teaching-Activities",
      *     statusCodes={
      *         200="Returned when successful",
      *         500="Returned on internal server error",
@@ -230,6 +222,40 @@ class TeachingActivityRestController extends FOSRestController
 
         return new Response(
             $serializer->serialize($activityTypes, $_format),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
+     * @Rest\Get("/{id}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get teaching activity by id",
+     *     section="Teaching-Activities",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when ....",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $id
+     * @param $_format
+     * @return Response
+     * @internal param $date
+     */
+    public function getActivityById(int $id, $_format)
+    {
+        /** @var ActivityManagerService $activityManager */
+        $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
+        /** @var Serializer $serializer */
+        $serializer = $this->get('jms_serializer');
+
+
+        /** @var $activity*/
+        $activity = $activityManager->getTeachingActivityDetailsById($id);
+        return new Response(
+            $serializer->serialize($activity, $_format),
             Response::HTTP_OK
         );
     }

@@ -150,9 +150,44 @@ class TeacherRestController extends FOSRestController
         $email = $paramFetcher->get('email');
 
 
-        $teacherManager->updateTeacher($name, $surname, $email);
+        $teacherManager->updateTeacher($id, $name, $surname, $email);
 
         return new Response('updated', Response::HTTP_OK);
+    }
+
+    /**
+     * @Rest\Post("/email.{_format}")
+     *
+     * @Rest\RequestParam(name="email", description="Student email")
+     *
+     * @ApiDoc(
+     *     description="Get student by email",
+     *     section="Teachers",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when the teacher with the given email is not founded",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param ParamFetcher $paramFetcher
+     * @param string $_format
+     * @return Response
+     */
+    public function getByEmailAction(ParamFetcher $paramFetcher, $_format)
+    {
+        /** @var TeacherManagerService $teacherManager */
+        $teacherManager = $this->get(TeacherManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $email = $paramFetcher->get('email');
+
+        $student = $teacherManager->getTeacherDetailsByEmail($email);
+
+        return new Response(
+            $serializer->serialize($student, $_format),
+            Response::HTTP_OK
+        );
     }
 
     /**

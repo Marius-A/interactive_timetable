@@ -8,11 +8,9 @@ use AppBundle\Model\NodeEntity\TeachingActivity;
 use AppBundle\Service\ActivityManagerService;
 use FOS\RestBundle\Controller\Annotations as Rest;
 use FOS\RestBundle\Controller\FOSRestController;
-use FOS\RestBundle\Request\ParamFetcher;
 use GraphAware\Neo4j\OGM\Common\Collection;
 use JMS\Serializer\Serializer;
 use Nelmio\ApiDocBundle\Annotation\ApiDoc;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -30,7 +28,7 @@ use Symfony\Component\HttpFoundation\Response;
 class ActivityRestController extends FOSRestController
 {
     /**
-     * @Rest\Get("/participant/{participantId}/{yearOfStudy}/{dateTime}.{_format}")
+     * @Rest\Get("/participant/{participantId}/{dateTime}.{_format}")
      *
      * @ApiDoc(
      *     description="Get activities",
@@ -43,13 +41,12 @@ class ActivityRestController extends FOSRestController
      * )
      *
      * @param int $participantId
-     * @param int $yearOfStudy
      * @param $dateTime
      * @param $_format
      * @return Response
      * @internal param $date
      */
-    public function getActivitiesForParticipantOnDate(int $participantId, int $yearOfStudy, $dateTime, $_format)
+    public function getActivitiesForParticipantOnDate(int $participantId, $dateTime, $_format)
     {
         /** @var ActivityManagerService $activityManager */
         $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
@@ -59,7 +56,7 @@ class ActivityRestController extends FOSRestController
         $date = new \DateTime($dateTime);
 
         /** @var TeachingActivity[] | Collection $activities */
-        $activities = $activityManager->getActivitiesForParticipantOnDate($participantId, $yearOfStudy, $date);
+        $activities = $activityManager->getActivitiesForParticipantOnDate($participantId, $date);
 
 
         return new Response(
@@ -134,7 +131,7 @@ class ActivityRestController extends FOSRestController
 
         $date = new \DateTime($dateTime);
 
-        /** @var TeachingActivity[] | Collection $activities */
+        /** @var array $activities */
         $activities = $activityManager->getActivitiesForTeacherOnDate($teacherId, $date);
         return new Response(
             $serializer->serialize($activities, $_format),
@@ -143,10 +140,10 @@ class ActivityRestController extends FOSRestController
     }
 
     /**
-     * @Rest\Get("/{id}.{_format}")
+     * @Rest\Get("/location/{locationId}/{dateTime}.{_format}")
      *
      * @ApiDoc(
-     *     description="Get activity by id",
+     *     description="Get activities on a location and date",
      *     section="Activity",
      *     statusCodes={
      *         201="Returned when successful",
@@ -155,23 +152,59 @@ class ActivityRestController extends FOSRestController
      *     }
      * )
      *
-     * @param int $id
+     * @param int $locationId
+     * @param $dateTime
      * @param $_format
      * @return Response
-     * @internal param $date
      */
-    public function getActivityById(int $id, $_format)
+    public function getActivitiesOnLocationAndDate(int $locationId, $dateTime, $_format)
     {
         /** @var ActivityManagerService $activityManager */
         $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
         /** @var Serializer $serializer */
         $serializer = $this->get('jms_serializer');
 
+        $date = new \DateTime($dateTime);
 
-        /** @var $activity*/
-        $activity = $activityManager->getActivityDetailsById($id);
+        /** @var array $activities */
+        $activities = $activityManager->getActivitiesForLocationOnDate($locationId, $date);
         return new Response(
-            $serializer->serialize($activity, $_format),
+            $serializer->serialize($activities, $_format),
+            Response::HTTP_OK
+        );
+    }
+
+    /**
+     * @Rest\Get("/subject/{subjectId}/{dateTime}.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get activities linked to a subject",
+     *     section="Activity",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         404="Returned when ....",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param int $subjectId
+     * @param $dateTime
+     * @param $_format
+     * @return Response
+     */
+    public function getActivitiesLinkedToSubjectOnDate(int $subjectId, $dateTime, $_format)
+    {
+        /** @var ActivityManagerService $activityManager */
+        $activityManager = $this->get(ActivityManagerService::SERVICE_NAME);
+        /** @var Serializer $serializer */
+        $serializer = $this->get('jms_serializer');
+
+        $date = new \DateTime($dateTime);
+
+        /** @var array $activities */
+        $activities = $activityManager->getActivitiesForSubjectOnDate($subjectId, $date);
+        return new Response(
+            $serializer->serialize($activities, $_format),
             Response::HTTP_OK
         );
     }

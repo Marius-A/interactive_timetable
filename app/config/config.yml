@@ -65,19 +65,21 @@ doctrine:
 nelmio_cors:
         defaults:
             allow_credentials: false
-            allow_origin: []
-            allow_headers: []
-            allow_methods: []
+            allow_origin: ['*']
+            allow_headers: ['Authorization', 'X-Requested-With', 'Content-Type', 'Accept', 'Origin', 'X-Custom-Auth']
+            allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS']
             expose_headers: []
-            max_age: 0
+            max_age: 3600
             hosts: []
             origin_regex: false
         paths:
             '^/api':
-                allow_origin: ['http://localhost:4200']
+                allow_origin: ['*']
+                hosts: ['firebaseapp.com']
                 allow_headers: ['*']
-                allow_methods: ['POST', 'PUT', 'GET', 'DELETE']
+                allow_methods: ['POST', 'PUT', 'GET', 'DELETE', 'OPTIONS']
                 max_age: 3600
+                allow_credentials: true
 
 fos_rest:
     param_fetcher_listener: true
@@ -94,16 +96,16 @@ fos_rest:
         rules:
             - { path: ^/api, priorities: [json, xml ], fallback_format: json, prefer_extension: false }
             - { path: ^/, priorities: [ html ], fallback_format: ~, prefer_extension: true }
-#    exception:
-#        codes:
-#            'Symfony\Component\Routing\Exception\ResourceNotFoundException': 404
-#            'Doctrine\ORM\OptimisticLockException': HTTP_CONFLICT
-#        messages:
-#            'Symfony\Component\Routing\Exception\ResourceNotFoundException': true
-#    allowed_methods_listener: true
-#    access_denied_listener:
-#        json: true
-#    body_listener: true
+    exception:
+        codes:
+            'Symfony\Component\Routing\Exception\ResourceNotFoundException': 404
+            'Doctrine\ORM\OptimisticLockException': HTTP_CONFLICT
+        messages:
+            'Symfony\Component\Routing\Exception\ResourceNotFoundException': true
+    allowed_methods_listener: true
+    access_denied_listener:
+        json: true
+    body_listener: true
 
 nelmio_api_doc: ~
 

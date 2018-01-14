@@ -222,4 +222,33 @@ class SubjectRestController extends FOSRestController
             Response::HTTP_OK
         );
     }
+
+    /**
+     * @Rest\Get("/.{_format}")
+     *
+     * @ApiDoc(
+     *     description="Get all subjects",
+     *     section="Subjects",
+     *     statusCodes={
+     *         201="Returned when successful",
+     *         500="Returned on internal server error",
+     *     }
+     * )
+     *
+     * @param string $_format
+     * @return Response
+     */
+    public function getAllAction($_format)
+    {
+        /** @var SubjectManagerService $subjectManager */
+        $subjectManager = $this->get(SubjectManagerService::SERVICE_NAME);
+        $serializer = $this->get('serializer');
+
+        $subjects = $subjectManager->getAllSubjectsDetails();
+
+        return new Response(
+            $serializer->serialize($subjects, $_format),
+            Response::HTTP_OK
+        );
+    }
 }
