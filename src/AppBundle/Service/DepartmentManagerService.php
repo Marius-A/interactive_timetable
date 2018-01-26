@@ -161,4 +161,28 @@ class DepartmentManagerService
 
         return $department;
     }
+
+    /**
+     * @param string $departmentName
+     * @return Department
+     */
+    public function getDepartmentByName(string $departmentName)
+    {
+        $department = $this->getEntityManager()
+            ->getRepository(Department::class)
+            ->findOneBy(
+                array(
+                    'shortName'=>$departmentName
+                )
+            );
+
+        if ($department == null) {
+            throw new HttpException(
+                Response::HTTP_NOT_FOUND,
+                $this->getTranslator()->trans('app.warnings.department.does_not_exists')
+            );
+        }
+
+        return $department;
+    }
 }

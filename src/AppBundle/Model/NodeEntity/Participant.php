@@ -3,6 +3,7 @@
 
 namespace AppBundle\Model\NodeEntity;
 
+use AppBundle\Model\NodeEntity\Util\ParticipantType;
 use GraphAware\Neo4j\OGM\Common\Collection;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use JMS\Serializer\Annotation as Serializer;
@@ -69,6 +70,11 @@ abstract class Participant extends BaseModel implements \JsonSerializable
     {
         return $this->teachingActivities;
     }
+
+    /**
+     * @return ParticipantType
+     */
+    public abstract function getType();
 
     /**
      * @param TeachingActivity[]|Collection $teachingActivities

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Model\NodeEntity;
 
+use AppBundle\Model\NodeEntity\Util\ParticipantType;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
 
@@ -162,5 +163,13 @@ class Series extends Participant
             'specialization'=>$this->specialization,
             'subSeries'=>$this->subSeries->toArray()
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return ParticipantType::SERIES;
     }
 }

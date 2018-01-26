@@ -37,6 +37,15 @@ abstract class BasicEnum
         return in_array(strtolower($name), $keys);
     }
 
+    /**
+     * @param string $name
+     * @return mixed
+     */
+    public static function getConstantValue(string $name){
+        $constants = self::getConstants();
+        return $constants[strtoupper($name)];
+    }
+
     public static function isValidValue($value, $strict = true)
     {
         $values = array_values(self::getConstants());

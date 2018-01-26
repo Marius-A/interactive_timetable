@@ -8,6 +8,7 @@ use AppBundle\Service\Traits\EntityManagerTrait;
 use AppBundle\Service\Traits\TranslatorTrait;
 use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 
 /**
@@ -26,6 +27,7 @@ class TeacherManagerService
      * @param string $surname
      * @param string $emailAddress
      * @return void
+     *
      */
     public function createNew(string $name, string $surname, string $emailAddress)
     {

@@ -58,6 +58,23 @@ class SpecializationManagerService
     }
 
     /**
+     * @param string $identifier
+     * @param string $specializationCategory
+     * @param Department $department
+     *
+     * @return Specialization
+     */
+    public function defineSpecializationByIdentifier(string $identifier, string $specializationCategory, Department $department){
+        $result = $this->getSpecializationByNameDepartmentAndCategory($identifier, $department->getId(), $specializationCategory);
+
+        if ($result != null) {
+            return $result;
+        }
+
+        return new Specialization($identifier, $identifier, $specializationCategory, $department);
+    }
+
+    /**
      * @param int $specializationId
      */
     public function removeSpecializationById(int $specializationId)
@@ -95,13 +112,13 @@ class SpecializationManagerService
      */
     public function getAllSpecializations()
     {
-        $result =  $this->getEntityManager()
+        $result = $this->getEntityManager()
             ->createQuery('MATCH (s:Specialization)-[:PART_OF]->(d:Department) RETURN s')
             ->addEntityMapping('s', Specialization::class, Query::HYDRATE_RAW)
             ->getResult();
 
         $specializations = array();
-        foreach ($result as $spec){
+        foreach ($result as $spec) {
             $specializations[] = $this->getPropertiesFromSpecializationNode($spec['s']);
         }
 
@@ -114,7 +131,8 @@ class SpecializationManagerService
      * @param string $category
      * @return Specialization
      */
-    public function getSpecializationByNameDepartmentAndCategory(string $name,string $departmentId,string $category){
+    public function getSpecializationByNameDepartmentAndCategory(string $name, string $departmentId, string $category)
+    {
         return $this->getEntityManager()
             ->createQuery('MATCH (s:Specialization)-[:PART_OF]->(d:Department) WHERE s.shortName = {name} AND s.specializationCategory = {category} AND ID(d) = {departmentId} RETURN s')
             ->addEntityMapping('s', Specialization::class)
@@ -122,6 +140,31 @@ class SpecializationManagerService
             ->setParameter('category', $category)
             ->setParameter('departmentId', $departmentId)
             ->getOneOrNullResult();
+    }
+
+    /**
+     * @param string $identifier
+     * @return Specialization
+     */
+    public function getSpecializationByIdentifier(string $identifier)
+    {
+        return $this->getEntityManager()
+            ->createQuery('MATCH (s:Specialization)-[:PART_OF]->(d:Department) WHERE s.shortName = {name} RETURN s')
+            ->addEntityMapping('s', Specialization::class)
+            ->setParameter('name', $identifier)
+            ->getOneOrNullResult();
+    }
+
+
+    /**
+     * @param string $name
+     * @param string $departmentId
+     * @param string $category
+     * @return string
+     */
+    public function getIdentifierByNameDepartmentAndCategory(string $name, string $departmentId, string $category)
+    {
+        return $name . '-' . $departmentId . '-' . $category;
     }
 
     /**

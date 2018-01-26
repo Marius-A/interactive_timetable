@@ -26,6 +26,8 @@ class LocationManagerService
     /**
      * @param string $shortName
      * @return Location
+     *
+     * @throws HttpException
      */
     public function createNew(string $shortName,string $fullName)
     {

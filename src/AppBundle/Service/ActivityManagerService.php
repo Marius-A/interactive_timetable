@@ -1233,6 +1233,9 @@ class ActivityManagerService
             case ParticipantType::SUB_SERIES:
                 $participant = $this->seriesManager->getSubSeriesById($id);
                 break;
+            case ParticipantType::SPECIALIZATION:
+                $participant = $this->specializationManager->getSpecializationById($id);
+                break;
         }
 
         return $participant;

@@ -2,6 +2,7 @@
 
 namespace AppBundle\Model\NodeEntity;
 
+use AppBundle\Model\NodeEntity\Util\ParticipantType;
 use AppBundle\Model\NodeEntity\Util\SpecializationCategory;
 use GraphAware\Neo4j\OGM\Annotations as OGM;
 use GraphAware\Neo4j\OGM\Common\Collection;
@@ -194,5 +195,13 @@ class Specialization extends Participant
             'identifier'=>$this->identifier,
             'series' => $this->series->toArray()
         );
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return ParticipantType::SPECIALIZATION;
     }
 }

@@ -109,6 +109,9 @@
             <call method="setEntityManager">
                 <argument type="service" id="neo4j.entity_manager"/>
             </call>
+            <call method="setSpecializationManager">
+                <argument type="service" id="app.specialization_manager.service"/>
+            </call>
             <call method="setTranslator">
                 <argument type="service" id="translator"/>
             </call>
@@ -125,6 +128,7 @@
 
         <service id="app.participant_manager.service" class="AppBundle\Service\ParticipantManagerService">
             <argument type="service" id="app.series_manager.service"/>
+            <argument type="service" id="app.specialization_manager.service"/>
             <call method="setEntityManager">
                 <argument type="service" id="neo4j.entity_manager"/>
             </call>

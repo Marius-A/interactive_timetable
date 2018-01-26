@@ -13,6 +13,7 @@ use GraphAware\Common\Type\Node;
 use GraphAware\Neo4j\OGM\Query;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class SeriesManagerService
 {
@@ -20,6 +21,9 @@ class SeriesManagerService
     use TranslatorTrait;
 
     const SERVICE_NAME = 'app.series_manager.service';
+
+    /** @var SpecializationManagerService */
+    private $specializationManager;
 
     /**
      * @param Specialization $specialization
@@ -43,6 +47,65 @@ class SeriesManagerService
 
         $this->getEntityManager()->persist($series);
         $this->getEntityManager()->flush();
+    }
+
+    /**
+     * @param string $identifier
+     * @return Series|mixed
+     */
+    public function defineSeriesByIdentifier(string $identifier)
+    {
+        $parts = explode('.', $identifier);
+
+        $specializationIdentifier = substr($parts[0], 0, -1);
+        $year = (int)substr($parts[0], -1);
+
+        $specialization = $this->specializationManager->getSpecializationByIdentifier($specializationIdentifier)[0];
+
+        if ($specialization == null) {
+            throw new NotFoundHttpException('Specialization wit identifier' . $specializationIdentifier . ' not found');
+        }
+
+        $result = $this->getSeriesByName($specialization, $identifier);
+
+        if ($result != null) {
+            return $result;
+        }
+
+        return new Series($identifier, $year, $specialization);
+    }
+
+    /**
+     * @param string $identifier
+     * @return Series|mixed
+     */
+    public function defineSubSeriesByIdentifier(string $identifier)
+    {
+        $parts = explode('.', $identifier);
+
+        $specializationIdentifier = substr($parts[0], 0, -1);
+
+        $parts = explode('-', $identifier);
+        $subGroupName = $parts[1];
+
+
+        $specialization = $this->specializationManager->getSpecializationByIdentifier($specializationIdentifier)[0];
+
+        $result = null;
+        try {
+            $result = $this->getSubSeriesByIdentifier($identifier);
+        }catch (\Exception $exception){}
+
+        if ($result != null) {
+            return $result;
+        }
+
+        $result = $this->getSeriesByName($specialization, $parts[0])[0];
+
+        $this->throwNotFoundOnNullSeriesWithIdentifier($result, $parts[0]);
+
+
+        return new SubSeries($subGroupName, $result);
     }
 
     /**
@@ -128,7 +191,7 @@ class SeriesManagerService
     public function getSeriesBySubSeriesId(string $subSeriesId)
     {
         $series = $this->getEntityManager()
-            ->createQuery('MATCH (s:SubSeries)-[:PART_OF]->(se:Series) WHERE ID(s) = '.$subSeriesId.' RETURN se')
+            ->createQuery('MATCH (s:SubSeries)-[:PART_OF]->(se:Series) WHERE ID(s) = ' . $subSeriesId . ' RETURN se')
             ->addEntityMapping('se', Series::class)
             ->setParameter('identifier', $subSeriesId)
             ->getOneOrNullResult();
@@ -213,9 +276,10 @@ class SeriesManagerService
      * @param Node $node
      * @return array
      */
-    private function getPropertiesFromSubSeriesNode($node){
+    private function getPropertiesFromSubSeriesNode($node)
+    {
         $id = $node->identity();
-        $values =  $node->values();
+        $values = $node->values();
         $values['id'] = $id;
         $values['series'] = $this->getSeriesDetailsBySubSeriesId($id);
 
@@ -226,14 +290,14 @@ class SeriesManagerService
      * @param Node $node
      * @return array
      */
-    private function getPropertiesFromSeriesNode($node){
+    private function getPropertiesFromSeriesNode($node)
+    {
         $id = $node->identity();
-        $values =  $node->values();
+        $values = $node->values();
         $values['id'] = $id;
 
         return $values;
     }
-
 
 
     /**
@@ -273,7 +337,7 @@ class SeriesManagerService
         if ($series == null) {
             throw new HttpException(
                 Response::HTTP_NOT_FOUND,
-                $this->getTranslator()->trans('app.warnings.series.does_not_exists').': '.$identifier
+                $this->getTranslator()->trans('app.warnings.series.does_not_exists') . ': ' . $identifier
             );
         }
     }
@@ -301,7 +365,7 @@ class SeriesManagerService
         if ($subSeries == null) {
             throw new HttpException(
                 Response::HTTP_NOT_FOUND,
-                $this->getTranslator()->trans('app.warnings.series.does_not_exists').': '.$identifier
+                $this->getTranslator()->trans('app.warnings.series.does_not_exists') . ': ' . $identifier
             );
         }
     }
@@ -314,5 +378,15 @@ class SeriesManagerService
         $subSeries = $this->getSubSeriesById($subSeriesId);
         $this->getEntityManager()->remove($subSeries, true);
         $this->getEntityManager()->flush();
+    }
+
+    /**
+     * @param SpecializationManagerService $specializationManager
+     * @return SeriesManagerService
+     */
+    public function setSpecializationManager(SpecializationManagerService $specializationManager): SeriesManagerService
+    {
+        $this->specializationManager = $specializationManager;
+        return $this;
     }
 }

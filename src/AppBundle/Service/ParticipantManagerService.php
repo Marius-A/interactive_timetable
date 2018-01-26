@@ -28,17 +28,43 @@ class ParticipantManagerService
 
     /** @var  SeriesManagerService */
     private $seriesManager;
+    /** @var SpecializationManagerService */
+    private $specializationManager;
 
     /**
      * ParticipantManagerService constructor.
      * @param SeriesManagerService $seriesManager
+     * @param SpecializationManagerService $specializationManagerService
      */
-    public function __construct(SeriesManagerService $seriesManager)
+    public function __construct(SeriesManagerService $seriesManager, SpecializationManagerService $specializationManagerService)
     {
         $this->seriesManager = $seriesManager;
+        $this->specializationManager = $specializationManagerService;
     }
 
+    /**
+     * @param array $participants
+     * @throws \Exception
+     */
+    public function createParticipants(array $participants){
 
+        foreach ($participants as $participant){
+            $this->createParticipant($participant);
+        }
+
+        $this->entityManager->flush();
+    }
+
+    /**
+     * @param array $participants
+     * @throws \Exception
+     */
+    public function createParticipant(Participant $participant){
+
+        $this->entityManager->persist($participant);
+
+        $this->entityManager->flush();
+    }
     /**
      * @param $activityId
      * @return array
@@ -165,29 +191,37 @@ class ParticipantManagerService
         $participants = new Collection();
 
         foreach ($splited as $serializedParticipant) {
-            $x = explode(':', $serializedParticipant);
-
-            $type = $this->getParticipantTypeFromRo(trim($x[0]));
-            $identifier = trim($x[1]);
-            $participant = $this->getParticipantByTypeAndIdentifier($type, $identifier);
-            $participants->add($participant);
+            $participants->add($this->deserializeParticipant($serializedParticipant));
         }
 
         return $participants;
     }
 
     /**
+     * @param string $serializedParticipant
+     * @return Participant
+     */
+    public function deserializeParticipant(string $serializedParticipant)
+    {
+        $x = explode(':', $serializedParticipant);
+
+        $type = $this->getParticipantTypeFromRo(trim($x[0]));
+        $identifier = trim($x[1]);
+
+        return $this->getParticipantByTypeAndIdentifier($type, $identifier);
+    }
+
+    /**
      * @param $type
      * @param $identifier
      * @return Participant
+     *
      */
     private function getParticipantByTypeAndIdentifier($type, $identifier)
     {
         if (!ParticipantType::isValidValue(strtolower($type))) {
             throw new HttpException(Response::HTTP_BAD_REQUEST, 'Invalid participant type:' . $type);
         }
-        //TODO add specialization
-
         $participant = null;
 
         switch ($type) {
@@ -196,6 +230,9 @@ class ParticipantManagerService
                 break;
             case ParticipantType::SUB_SERIES:
                 $participant = $this->seriesManager->getSubSeriesByIdentifier($identifier)[0];
+                break;
+            case ParticipantType::SPECIALIZATION:
+                $participant = $this->specializationManager->getSpecializationByIdentifier($identifier)[0];
                 break;
         }
 
